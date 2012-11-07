@@ -42,6 +42,10 @@ var StatusBar = {
 
   headphonesActive: false,
 
+  // JW: this keeps how many current installs/updates we do
+  // JW: it triggers the icon "downloadingInstall"
+  activeInstallsCount: 0,
+
   /* For other app to acquire */
   get height() {
     if (this.screen.classList.contains('active-statusbar')) {
@@ -480,6 +484,11 @@ var StatusBar = {
     headphones: function sb_updateHeadphones() {
       var icon = this.icons.headphones;
       icon.hidden = !this.headphonesActive;
+    },
+
+    downloadingInstall: function sb_updateDownloadingInstall() {
+      var icon = this.icons.downloadingInstall;
+      icon.hidden = this.activeInstallsCount === 0;
     }
   },
 
@@ -498,12 +507,25 @@ var StatusBar = {
     this.icons.notification.dataset.unread = unread;
   },
 
+  incActiveInstallDownloads: function sb_incActiveInstallDownloads() {
+    this.activeInstallsCount++;
+    this.update.downloadingInstall.call(this);
+  },
+
+  decActiveInstallDownloads: function sb_decActiveInstallDownloads() {
+    if (--this.activeInstallsCount < 0) {
+      this.activeInstallsCount = 0;
+    }
+
+    this.update.downloadingInstall.call(this);
+  },
+
   getAllElements: function sb_getAllElements() {
     // ID of elements to create references
     var elements = ['notification', 'time',
     'battery', 'wifi', 'data', 'flight-mode', 'signal', 'network-activity',
     'tethering', 'alarm', 'bluetooth', 'mute', 'headphones',
-    'recording', 'sms', 'geolocation', 'usb', 'label'];
+    'recording', 'sms', 'geolocation', 'usb', 'label', 'downloading-install'];
 
     var toCamelCase = function toCamelCase(str) {
       return str.replace(/\-(.)/g, function replacer(str, p1) {
