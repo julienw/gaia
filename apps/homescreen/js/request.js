@@ -1,15 +1,15 @@
 
 'use strict';
 
-var UninstallDialog = (function() {
+var ConfirmDialog = (function() {
 
-  var dialog = document.getElementById('delete-dialog');
+  var dialog = document.getElementById('confirm-dialog');
 
-  var titleElem = document.getElementById('delete-dialog-title');
-  var messageElem = document.getElementById('delete-dialog-message');
+  var titleElem = document.getElementById('confirm-dialog-title');
+  var messageElem = document.getElementById('confirm-dialog-message');
 
-  var cancelButton = document.getElementById('delete-dialog-cancel-button');
-  var confirmButton = document.getElementById('delete-dialog-confirm-button');
+  var cancelButton = document.getElementById('confirm-dialog-cancel-button');
+  var confirmButton = document.getElementById('confirm-dialog-confirm-button');
 
   return {
     hide: function dialog_hide() {

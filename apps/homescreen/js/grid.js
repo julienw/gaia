@@ -685,6 +685,8 @@ const GridManager = (function() {
         app.ondownloaderror = null;
       };
       app.ondownloaderror = function ondownloaderror(event) {
+        console.log('---------------------------------> App installState ' + event.application.installState);
+        console.log('---------------------------------> App downloading ' + event.application.downloading);
         createOrUpdateIconForApp(app, false, entryPoint);
       }
     }

@@ -257,7 +257,7 @@ Icon.prototype = {
   updateAppStatus: function icon_updateAppStatus(app) {
     if (app) {
       this.downloading = app.installState === 'pending' && app.downloading;
-      this.cancelled = app.installState === 'pending' && (!app.downloading || !app.readyToApplyDownload); //HACK, downloading is true even when we cancel!;
+      this.cancelled = app.installState === 'pending' && !app.downloading;
     } else {
       this.downloading = false;
       this.cancelled = false;
@@ -570,13 +570,25 @@ Page.prototype = {
         return;
       }
 
+      console.log('Icon downloading: ' + icon.downloading);
+      console.log('Icon cancelled: ' + icon.cancelled);
+
       if (icon.cancelled) {
-        icon.app.download();
-        icon.app.ondownloadsuccess = function (evt) {
-          var app = evt.application;
-          alert('Download finished, applying download');
-          navigator.mozApps.mgmt.applyDownload(app);
-        }
+        var confirm =  {
+          title: navigator.mozL10n.get('download'),
+          callback: function onAccept() {
+            icon.app.download();
+            icon.update(icon.descriptor, icon.app);   
+            ConfirmDialog.hide();
+          }
+        };
+
+        var cancel = {
+          title: navigator.mozL10n.get('cancel'),
+          callback: ConfirmDialog.hide
+        };
+
+        ConfirmDialog.show('Restart download', '', cancel, confirm);
         return;
       }
       icon.app.launch();
