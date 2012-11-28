@@ -570,26 +570,8 @@ Page.prototype = {
         return;
       }
 
-      console.log('Icon downloading: ' + icon.downloading);
-      console.log('Icon cancelled: ' + icon.cancelled);
-
       if (icon.cancelled) {
-        var confirm =  {
-          title: navigator.mozL10n.get('download'),
-          callback: function onAccept() {
-            icon.app.download();
-            icon.update(icon.descriptor, icon.app);   
-            ConfirmDialog.hide();
-          }
-        };
-
-        var cancel = {
-          title: navigator.mozL10n.get('cancel'),
-          callback: ConfirmDialog.hide
-        };
-
-        ConfirmDialog.show('Restart download', '', cancel, confirm);
-        return;
+        GridManager.restartDownload(icon.app, icon);
       }
       icon.app.launch();
     }
