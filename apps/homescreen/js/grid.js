@@ -762,7 +762,7 @@ const GridManager = (function() {
         // icon, we will have new app status then
         app.onprogress = function onDownloadProgress(evt) {
           app.onprogress = null;
-          icon.update(icon.descriptor, app);
+          icon.update(icon.descriptor, evt.application);
         };
         app.download();
         ConfirmDialog.hide();
