@@ -270,6 +270,13 @@ Icon.prototype = {
     var oldDescriptor = this.descriptor;
     this.descriptor = descriptor;
 
+    if (this.downloading) {
+      this.img.src = this.DOWNLOAD_ICON_URL;
+      this.container.style.visibility = 'visible';
+      this.icon.classList.add('loading');
+      return;
+    }
+
     if (descriptor.icon == oldDescriptor.icon) {
       this.descriptor.renderedIcon = oldDescriptor.renderedIcon;
     } else {
