@@ -747,6 +747,41 @@ const GridManager = (function() {
     }
   }
 
+  /*
+   * Shows a dialog to confirm the download retry
+   * calls the method 'download' from app and listens
+   * to the first 'progress' event to update the icon
+   * status.
+   */
+  function restartDownload(app, icon) {
+    var _ = navigator.mozL10n.get;
+    var confirm =  {
+      title: _('download'),
+      callback: function onAccept() {
+        // Listen to the first progress event, and refresh the
+        // icon, we will have new app status then
+        app.onprogress = function onDownloadProgress(evt) {
+          app.onprogress = null;
+          icon.update(icon.descriptor, evt.application);
+        };
+        app.download();
+        ConfirmDialog.hide();
+      }
+    };
+
+    var cancel = {
+      title: _('cancel'),
+      callback: ConfirmDialog.hide
+    };
+
+    var localizedName = icon.descriptor.localizedName || icon.descriptor.name;
+    ConfirmDialog.show(_('restart-download-title'), 
+      _('restart-download-body', {'name': localizedName}), 
+      cancel, 
+      confirm);
+    return;
+  }
+
   function bestMatchingIcon(app, manifest) {
     if (app.installState === 'pending') {
       return app.downloading ?
@@ -913,6 +948,8 @@ const GridManager = (function() {
 
     dirCtrl: dirCtrl,
 
-    pageHelper: pageHelper
+    pageHelper: pageHelper,
+
+    restartDownload: restartDownload
   };
 })();
