@@ -188,6 +188,7 @@ var CallHandler = (function callHandler() {
 
   /* === Calls === */
   function call(number) {
+    console.log(">>> call");
     if (UssdManager.isUSSD(number)) {
       UssdManager.send(number);
       return;

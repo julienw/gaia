@@ -1,6 +1,7 @@
 'use strict';
 
 function HandledCall(aCall, aNode) {
+  console.log(">>> HandledCall");
   this._ticker = null;
   this.photo = null;
 
@@ -80,6 +81,7 @@ HandledCall.prototype.startTimer = function hc_startTimer() {
 };
 
 HandledCall.prototype.updateCallNumber = function hc_updateCallNumber() {
+  console.log(">>> updateCallNumber");
   var number = this.call.number;
   var node = this.numberNode;
   var additionalInfoNode = this.additionalInfoNode;
@@ -100,7 +102,9 @@ HandledCall.prototype.updateCallNumber = function hc_updateCallNumber() {
   }
 
   var self = this;
+  console.log(">>> before findByNumber number=" + number);
   Contacts.findByNumber(number, function lookupContact(contact, matchingTel) {
+    console.log(">>> findByNumber returns " + JSON.stringify(contact));
     if (contact && contact.name) {
       node.textContent = contact.name;
       var additionalInfo = Utils.getPhoneNumberAdditionalInfo(matchingTel,
