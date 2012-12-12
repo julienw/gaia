@@ -161,31 +161,37 @@ suite('system/UpdateManager', function() {
     mocksHelper.setup();
   });
 
-  teardown(function() {
-    UpdateManager.updatableApps = [];
-    UpdateManager.updatesQueue = [];
-    UpdateManager.downloadsQueue = [];
-    UpdateManager._downloading = false;
-    UpdateManager.container = null;
-    UpdateManager.message = null;
-    UpdateManager.toaster = null;
-    UpdateManager.toasterMessage = null;
-    UpdateManager.laterButton = null;
-    UpdateManager.downloadButton = null;
-    UpdateManager.downloadDialog = null;
-    UpdateManager.downloadDialogTitle = null;
-    UpdateManager.downloadDialogList = null;
+  teardown(function(done) {
+    // wait before resetting the UpdateManager because some timeout are still
+    // waiting
+    setTimeout(function nested_teardown() {
+      console.log('teardown');
+      UpdateManager.updatableApps = [];
+      UpdateManager.updatesQueue = [];
+      UpdateManager.downloadsQueue = [];
+      UpdateManager._downloading = false;
+      UpdateManager.container = null;
+      UpdateManager.message = null;
+      UpdateManager.toaster = null;
+      UpdateManager.toasterMessage = null;
+      UpdateManager.laterButton = null;
+      UpdateManager.downloadButton = null;
+      UpdateManager.downloadDialog = null;
+      UpdateManager.downloadDialogTitle = null;
+      UpdateManager.downloadDialogList = null;
+      MockAppsMgmt.mTeardown();
 
-    MockAppsMgmt.mTeardown();
+      mocksHelper.teardown();
 
-    mocksHelper.teardown();
+      fakeNode.parentNode.removeChild(fakeNode);
+      fakeToaster.parentNode.removeChild(fakeToaster);
+      fakeDialog.parentNode.removeChild(fakeDialog);
 
-    fakeNode.parentNode.removeChild(fakeNode);
-    fakeToaster.parentNode.removeChild(fakeToaster);
-    fakeDialog.parentNode.removeChild(fakeDialog);
+      lastDispatchedEvent = null;
+      lastWakeLock = null;
 
-    lastDispatchedEvent = null;
-    lastWakeLock = null;
+      done();
+    }, tinyTimeout * 3);
   });
 
   suite('init', function() {
@@ -423,7 +429,7 @@ suite('system/UpdateManager', function() {
             var css = UpdateManager.container.classList;
             assert.isTrue(css.contains('displayed'));
             done();
-          }, tinyTimeout * 2);
+          }, tinyTimeout * 3);
         });
 
         test('should not display if there are no more updates', function(done) {
@@ -435,7 +441,7 @@ suite('system/UpdateManager', function() {
             var css = UpdateManager.container.classList;
             assert.isFalse(css.contains('displayed'));
             done();
-          }, tinyTimeout * 2);
+          }, tinyTimeout * 3);
         });
 
         test('should display an updated count', function(done) {
@@ -444,7 +450,7 @@ suite('system/UpdateManager', function() {
             assert.equal('updatesAvailableMessage{"n":2}',
                          UpdateManager.message.textContent);
             done();
-          }, tinyTimeout * 2);
+          }, tinyTimeout * 3);
         });
 
         suite('update toaster', function() {
@@ -457,7 +463,7 @@ suite('system/UpdateManager', function() {
               assert.equal('updatesAvailableMessage{"n":1}',
                            UpdateManager.message.textContent);
               done();
-            }, tinyTimeout * 2);
+            }, tinyTimeout * 3);
           });
 
           test('should display an updated count', function(done) {
@@ -466,7 +472,7 @@ suite('system/UpdateManager', function() {
               assert.equal('updatesAvailableMessage{"n":2}',
                            UpdateManager.message.textContent);
               done();
-            }, tinyTimeout * 2);
+            }, tinyTimeout * 3);
           });
 
           test('should show the right message', function(done) {
@@ -474,7 +480,7 @@ suite('system/UpdateManager', function() {
               assert.equal('updatesAvailableMessage{"n":1}',
                            UpdateManager.toasterMessage.textContent);
               done();
-            }, tinyTimeout * 2);
+            }, tinyTimeout * 3);
           });
 
 
@@ -485,8 +491,8 @@ suite('system/UpdateManager', function() {
                 var css = UpdateManager.toaster.classList;
                 assert.isFalse(css.contains('displayed'));
                 done();
-              }, tinyTimeout * 2);
-            }, tinyTimeout * 2);
+              }, tinyTimeout * 3);
+            }, tinyTimeout * 3);
           });
         });
 
@@ -495,7 +501,7 @@ suite('system/UpdateManager', function() {
           setTimeout(function() {
             assert.ok(MockNotificationScreen.wasMethodCalled[method1]);
             done();
-          }, tinyTimeout * 2);
+          }, tinyTimeout * 3);
         });
       });
 

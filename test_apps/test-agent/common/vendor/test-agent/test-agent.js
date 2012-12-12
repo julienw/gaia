@@ -2015,7 +2015,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     if (isNode) {
       Mocha = require('mocha');
     } else {
-      Mocha = window.mocha;
+      Mocha = window.Mocha;
     }
 
     this.envs = [];
