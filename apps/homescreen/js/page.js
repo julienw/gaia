@@ -290,6 +290,15 @@ Icon.prototype = {
     canvas.toBlob(this.renderBlob.bind(this));
   },
 
+  // The url that is passed as a parameter to the callback must be revoked
+  loadRenderedIcon: function icon_loadRenderedIcon(callback, img) {
+    img = img || this.img;
+    img.src = window.URL.createObjectURL(this.descriptor.renderedIcon);
+    img.onload = img.onerror = function done() {
+      callback(this.src);
+    };
+  },
+
   renderBlob: function icon_renderBlob(blob) {
     this.descriptor.renderedIcon = blob;
     GridManager.markDirtyState();
@@ -298,16 +307,14 @@ Icon.prototype = {
 
   displayRenderedIcon: function icon_displayRenderedIcon(img, skipRevoke) {
     img = img || this.img;
-    var url = window.URL.createObjectURL(this.descriptor.renderedIcon);
-    img.src = url;
     var self = this;
-    img.onload = img.onerror = function cleanup() {
+    this.loadRenderedIcon(function cleanup(url) {
       img.style.visibility = 'visible';
       if (!skipRevoke)
         window.URL.revokeObjectURL(url);
       if (self.needsShow)
         self.show();
-    };
+    }, img);
   },
 
   show: function icon_show() {
@@ -613,7 +620,7 @@ Page.prototype = {
     }
   },
 
-  doDragLeave: function pg_doReArrange(reflow) {
+  doDragLeave: function pg_doReArrange(callback, reflow) {
     this.iconsWhileDragging.forEach(function reset(node) {
       node.style.MozTransform = node.style.MozTransition = '';
       delete node.dataset.posX;
@@ -624,24 +631,28 @@ Page.prototype = {
 
     if (reflow)
       this.olist.insertBefore(this.draggableNode, this.beforeNode);
+
+    callback();
   },
 
-  onDragLeave: function pg_onDragLeave(reflow) {
-    if (this.iconsWhileDragging.length === 0)
+  onDragLeave: function pg_onDragLeave(callback, reflow) {
+    if (this.iconsWhileDragging.length === 0) {
+      setTimeout(callback);
       return;
+    }
 
     if (!this.ready) {
       var self = this;
 
       self.container.addEventListener('onpageready', function onPageReady() {
-        self.doDragLeave(reflow);
+        self.doDragLeave(callback, reflow);
         self.container.removeEventListener('onpageready', onPageReady);
       });
 
       return;
     }
 
-    this.doDragLeave(reflow);
+    this.doDragLeave(callback, reflow);
   },
 
   placeIcon: function pg_placeIcon(node, from, to, transition) {
