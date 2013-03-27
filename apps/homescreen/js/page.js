@@ -294,9 +294,11 @@ Icon.prototype = {
   loadRenderedIcon: function icon_loadRenderedIcon(callback, img) {
     img = img || this.img;
     img.src = window.URL.createObjectURL(this.descriptor.renderedIcon);
-    img.onload = img.onerror = function done() {
-      callback(this.src);
-    };
+    if (callback) {
+      img.onload = img.onerror = function done() {
+        callback(this.src);
+      };
+    }
   },
 
   renderBlob: function icon_renderBlob(blob) {
@@ -305,13 +307,12 @@ Icon.prototype = {
     this.displayRenderedIcon();
   },
 
-  displayRenderedIcon: function icon_displayRenderedIcon(img, skipRevoke) {
+  displayRenderedIcon: function icon_displayRenderedIcon(img) {
     img = img || this.img;
     var self = this;
     this.loadRenderedIcon(function cleanup(url) {
       img.style.visibility = 'visible';
-      if (!skipRevoke)
-        window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(url);
       if (self.needsShow)
         self.show();
     }, img);
@@ -429,8 +430,7 @@ Icon.prototype = {
     // For some reason, cloning and moving a node re-triggers the blob
     // URI to be validated. So we assign a new blob URI to the image
     // and don't revoke it until we're finished with the animation.
-    var skipRevoke = true;
-    this.displayRenderedIcon(this.img, skipRevoke);
+    this.loadRenderedIcon();
 
     var icon = this.icon.cloneNode();
     var img = icon.querySelector('img');
