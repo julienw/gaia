@@ -79,6 +79,8 @@ var ThreadUI = global.ThreadUI = {
     this._mozMobileMessage = navigator.mozMobileMessage ||
       window.DesktopMockNavigatormozMobileMessage;
 
+    this._inputHandlerTimeout = null;
+
     window.addEventListener('resize', this.resizeHandler.bind(this));
 
     // In case of input, we have to resize the input following UX Specs.
@@ -332,8 +334,13 @@ var ThreadUI = global.ThreadUI = {
   },
 
   messageComposerInputHandler: function thui_messageInputHandler(event) {
-    this.updateInputHeight();
-    this.enableSend();
+    if (!this._inputHandlerTimeout) {
+      this._inputHandlerTimeout = setTimeout(function() {
+        this._inputHandlerTimeout = null;
+        this.updateInputHeight();
+        this.enableSend();
+      }.bind(this));
+    }
 
     if (Compose.type === 'sms') {
       return;

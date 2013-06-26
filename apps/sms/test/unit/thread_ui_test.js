@@ -163,6 +163,7 @@ suite('thread_ui.js >', function() {
 
     suite('Thread View', function() {
       setup(function() {
+        this.sinon.useFakeTimers();
         window.location.hash = '#thread-1';
       });
 
@@ -211,12 +212,15 @@ suite('thread_ui.js >', function() {
       });
 
       test('button should be disabled when there is neither contact or input',
-        function() {
+      function() {
+        ThreadUI.enableSend();
         assert.isTrue(sendButton.disabled);
       });
 
       test('button should be disabled when there is no contact', function() {
         Compose.append('Hola');
+
+        ThreadUI.enableSend();
         assert.isTrue(sendButton.disabled);
       });
 
@@ -237,6 +241,7 @@ suite('thread_ui.js >', function() {
           number: '999'
         });
 
+        ThreadUI.enableSend();
         assert.isFalse(sendButton.disabled);
       });
 
