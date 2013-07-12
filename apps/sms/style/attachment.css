@@ -2,18 +2,19 @@
  * Attachment containers are either:
  *  - <div> elements, in the message thread;
  *  - <iframe> elements, in the Compose area (draft attachments).
+ * Both containers have an `attachment-container' class, but only <iframe>
+ * containers have an `attachment-draft' class.
  */
 .attachment-container {
   position: relative;
 
   display: block;
   border: none;
+  height: 82px; /* default size = 80 px + border */
+  width: 82px;
 }
 
-/* this `.attachment-draft' selector is specific to <iframe> containers */
-.attachment-draft {  /* maximize width/height to catch all click events */
-  width: 100%;
-  height: 100%;
+.attachment-draft {
   margin: 0;
   padding: 0;
 
@@ -33,8 +34,6 @@
 
 .attachment-container.preview { /* 80x80 px thumbnail, no filename shown */
   /* thumbnail size is defined dynamically, extensible to 80x120 or 120x80 */
-  height: 82px; /* default size = 80 px + border */
-  width: 82px;
 }
 
 .article-list[data-type="list"] .message .attachment-container {
