@@ -65,7 +65,24 @@ var Navigation = {
 
     var browserFrame = document.createElement('iframe');
     browserFrame.setAttribute('mozbrowser', 'true');
+    browserFrame.setAttribute('mozasyncpanzoom', 'true');
     browserFrame.classList.add('external');
+
+    browserFrame.addEventListener('mozbrowserloadstart', function() {
+      console.log('started loading', this.src);
+    });
+
+    browserFrame.addEventListener('mozbrowserloadend', function() {
+      console.log('ended loading', this.src);
+    });
+
+    browserFrame.addEventListener('mozbrowsererror', function(e) {
+      console.log('got an error for', this.src, 'with type', e.detail.type);
+    });
+
+    browserFrame.addEventListener('load', function() {
+      console.log('loaded', this.src);
+    });
 
     var container = document.querySelector(this.externalUrlLoaderSelector);
     container.appendChild(browserFrame);
