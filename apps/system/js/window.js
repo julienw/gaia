@@ -4,24 +4,31 @@
 (function(window) {
   'use strict';
   window.AppWindow = function AppWindow(configuration) {
+    console.log('>>> AppWindow 1');
     for (var key in configuration) {
       this[key] = configuration[key];
     }
+    console.log('>>> AppWindow 2');
 
     // Check if it's a fullscreen app.
     var manifest = this.manifest;
     if ('entry_points' in manifest && manifest.entry_points &&
         manifest.type == 'certified') {
+      console.log('>>> AppWindow 3');
       manifest = manifest.entry_points[this.origin.split('/')[3]];
+      console.log('>>> AppWindow 4');
     }
     this._fullScreen = 'fullscreen' in manifest ? manifest.fullscreen : false;
+    console.log('>>> AppWindow 5');
 
     // We keep the appError object here for the purpose that
     // we may need to export the error state of AppWindow instance
     // to the other module in the future.
     this.appError = new AppError(this);
+    console.log('>>> AppWindow 6');
 
     this.render();
+    console.log('>>> AppWindow 7');
 
     return this;
   };
