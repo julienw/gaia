@@ -51,7 +51,6 @@ var numSteps = Object.keys(steps).length;
 var Navigation = {
   currentStep: 1,
   previousStep: 1,
-  externalUrlLoaderSelector: '#external-url-loader',
 
   init: function n_init() {
     _ = navigator.mozL10n.get;
@@ -62,55 +61,13 @@ var Navigation = {
     window.addEventListener('hashchange', this);
     UIManager.activationScreen.addEventListener('click',
         this.handleExternalLinksClick.bind(this));
-
-    var browserFrame = document.createElement('iframe');
-    browserFrame.setAttribute('mozbrowser', 'true');
-    browserFrame.setAttribute('mozasyncpanzoom', 'true');
-    browserFrame.classList.add('external');
-
-    browserFrame.addEventListener('mozbrowserloadstart', function() {
-      console.log('started loading', this.src);
-    });
-
-    browserFrame.addEventListener('mozbrowserloadend', function() {
-      console.log('ended loading', this.src);
-    });
-
-    browserFrame.addEventListener('mozbrowsererror', function(e) {
-      console.log('got an error for', this.src, 'with type', e.detail.type);
-    });
-
-    browserFrame.addEventListener('load', function() {
-      console.log('loaded', this.src);
-    });
-
-    var container = document.querySelector(this.externalUrlLoaderSelector);
-    container.appendChild(browserFrame);
-
-    this.externalIframe = browserFrame;
-
-    // this will be called by setTimeout, so it's easier if it's already bound
-    this.backFromIframe = this.backFromIframe.bind(this);
-  },
-
-  backFromIframe: function n_backFromIframe() {
-    if (window.location.hash === this.externalUrlLoaderSelector) {
-      window.history.back();
-      // iframes are modifying history as well
-      setTimeout(this.backFromIframe, 0);
-    }
   },
 
   back: function n_back(event) {
     var currentStep = steps[this.currentStep];
     var actualHash = window.location.hash;
     if (actualHash != currentStep.hash) {
-      if (actualHash === this.externalUrlLoaderSelector) {
-        this.externalIframe.src = 'about:blank';
-        this.backFromIframe();
-      } else {
-        window.history.back();
-      }
+      window.history.back();
     } else {
       var self = this;
       var goToStep = function() {
@@ -165,13 +122,7 @@ var Navigation = {
   },
 
   displayExternalLink: function n_displayExternalLink(href, title) {
-    this.externalIframe.src = href;
-    document.location.hash = this.externalUrlLoaderSelector;
-
-    if (title) {
-      // title is already localized
-      UIManager.mainTitle.innerHTML = title;
-    }
+    window.open(href);
   },
 
   getProgressBarClassName: function n_getProgressBarClassName() {
@@ -244,7 +195,6 @@ var Navigation = {
       case '#about-your-privacy':
       case '#sharing-performance-data':
         UIManager.mainTitle.innerHTML = _('aboutBrowser');
-      case this.externalUrlLoaderSelector:
         // override the className here
         className = 'hidden';
         UIManager.navBar.classList.add('back-only');
