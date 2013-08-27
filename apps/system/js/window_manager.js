@@ -351,7 +351,6 @@ var WindowManager = (function() {
 
     // Dispatch an 'appopen' event.
     var manifestURL = runningApps[displayedApp].manifestURL;
-    console.log('>>> dispatching appopen for', manifestURL);
     var evt = document.createEvent('CustomEvent');
     evt.initCustomEvent('appopen', true, false, {
       manifestURL: manifestURL,
@@ -410,7 +409,6 @@ var WindowManager = (function() {
     }
 
     // Inform keyboardmanager that we've finished the transition
-    console.log('>>> dispatching appclose');
     dispatchEvent(new CustomEvent('appclose'));
   }
 
@@ -789,7 +787,6 @@ var WindowManager = (function() {
     // Dispatch an appwillopen event only when we open an app
     if (newApp != currentApp) {
       var evt = document.createEvent('CustomEvent');
-      console.log('>>> dispatching appwillopen for', newApp);
       evt.initCustomEvent('appwillopen', true, true, {
         origin: newApp,
         isHomescreen: (newApp === homescreen)
@@ -798,7 +795,6 @@ var WindowManager = (function() {
       var app = runningApps[newApp];
       // Allows listeners to cancel app opening and so stay on homescreen
       if (!app.iframe.dispatchEvent(evt)) {
-        console.log('>>> appwillopen was canceled');
         if (callback) {
           callback();
         }
@@ -1031,11 +1027,9 @@ var WindowManager = (function() {
 
   function appendFrame(origFrame, origin, url, name, manifest, manifestURL,
                        expectingSystemMessage) {
-    console.log('>>> appendFrame 1');
     // Create the <iframe mozbrowser mozapp> that hosts the app
     var frame =
         createFrame(origFrame, origin, url, name, manifest, manifestURL);
-    console.log('>>> appendFrame 2');
     var iframe = frame.firstChild;
     frame.id = 'appframe' + nextAppId++;
     iframe.dataset.frameType = 'window';
@@ -1080,7 +1074,6 @@ var WindowManager = (function() {
 
     // Add the iframe to the document
     windows.appendChild(frame);
-    console.log('>>> appendFrame 3');
 
     // And map the app origin to the info we need for the app
     var app = new AppWindow({
@@ -1100,7 +1093,6 @@ var WindowManager = (function() {
     }
 
     numRunningApps++;
-    console.log('>>> appendFrame 4');
 
     return app;
   }
@@ -1309,13 +1301,10 @@ var WindowManager = (function() {
     // TODO: Move into app window's attribute.
     var startTime = Date.now();
     var config = e.detail;
-
-    console.log('>>> got launch notification for', JSON.stringify(config));
     // Don't need to launch system app.
     if (config.url === window.location.href)
       return;
 
-    console.log('>>> 1');
     var splash = getIconForSplash(config.manifest);
     // TODO: Move into app Window.
     if (splash) {
@@ -1328,24 +1317,19 @@ var WindowManager = (function() {
       img.src = splash;
     }
 
-    console.log('>>> 2');
     if (!config.isSystemMessage) {
       if (config.origin == homescreen) {
         // No need to append a frame if is homescreen
         setDisplayedApp();
       } else {
-        console.log('>>> 3');
         if (!isRunning(config.origin)) {
-          console.log('>>> 4');
           appendFrame(null, config.origin, config.url,
                       config.name, config.manifest, config.manifestURL);
         }
-        console.log('>>> 5');
         // TODO: Move below iframe hack into app window.
         runningApps[config.origin].iframe.dataset.start = startTime;
         runningApps[config.origin].iframe.splash = splash;
         setDisplayedApp(config.origin, null);
-        console.log('>>> 6');
       }
     } else {
       if (config.isActivity && config.inline) {

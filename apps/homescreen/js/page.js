@@ -801,7 +801,6 @@ Page.prototype = {
    * @param{Object} DOM element
    */
   tap: function pg_tap(elem) {
-    console.log('>>> tap on', elem.nodeName);
     if (Homescreen.isInEditMode()) {
       if (elem.classList.contains('options')) {
         var icon = GridManager.getIcon(elem.parentNode.dataset);
@@ -815,8 +814,6 @@ Page.prototype = {
         return;
 
       if (icon.descriptor.entry_point) {
-        console.log('>>> launching',
-            JSON.stringify(icon.descriptor.entry_point));
         icon.app.launch(icon.descriptor.entry_point);
         this.disableTap();
         return;
@@ -826,7 +823,6 @@ Page.prototype = {
         GridManager.showRestartDownloadDialog(icon);
         return;
       }
-      console.log('>>> launching', JSON.stringify(icon.app));
       icon.app.launch();
       this.disableTap();
     }
