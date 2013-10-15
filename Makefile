@@ -163,7 +163,7 @@ endif
 SHELL := /bin/bash
 
 # what OS are we on?
-SYS=$(shell uname -s)
+SYS:=$(shell uname -s)
 ARCH?=$(shell uname -m)
 MSYS_FIX=
 ifeq (${SYS}/${ARCH},Darwin/i386)
@@ -233,7 +233,7 @@ GAIA_APP_CONFIG := /tmp/gaia-apps-temp.list
 $(warning GAIA_APP_SRCDIRS is deprecated, please use GAIA_APP_CONFIG)
 endif
 
-GAIA_APPDIRS=$(shell while read LINE; do \
+GAIA_APPDIRS:=$(shell while read LINE; do \
 	if [ "$${LINE\#$${LINE%?}}" = "*" ]; then \
 		srcdir="`echo "$$LINE" | sed 's/.\{2\}$$//'`"; \
 		[ -d $(CURDIR)$(SEP)$$srcdir ] && find -L $(CURDIR)$(SEP)$$srcdir -mindepth 1 -maxdepth 1 -type d | sed 's@[/\\]@$(SEP_FOR_SED)@g'; \
@@ -833,9 +833,9 @@ forward:
 # But if you're working on just gaia itself, and you already have B2G firmware
 # on your phone, and you have adb in your path, then you can use the
 # install-gaia target to update the gaia files and reboot b2g
-TARGET_FOLDER = webapps/$(BUILD_APP_NAME).$(GAIA_DOMAIN)
-APP_NAME = $(shell cat *apps/${BUILD_APP_NAME}/manifest.webapp | grep name | head -1 | cut -d '"' -f 4 | cut -b 1-15)
-APP_PID = $(shell adb shell b2g-ps | grep '^${APP_NAME}' | sed 's/^${APP_NAME}\s*//' | awk '{ print $$2 }')
+install-gaia: TARGET_FOLDER := webapps/$(BUILD_APP_NAME).$(GAIA_DOMAIN)
+install-gaia: APP_NAME := $(shell cat *apps/${BUILD_APP_NAME}/manifest.webapp | grep name | head -1 | cut -d '"' -f 4 | cut -b 1-15)
+install-gaia: APP_PID := $(shell adb shell b2g-ps | grep '^${APP_NAME}' | sed 's/^${APP_NAME}\s*//' | awk '{ print $$2 }')
 install-gaia: $(PROFILE_FOLDER)
 	@$(ADB) start-server
 ifeq ($(BUILD_APP_NAME),*)
