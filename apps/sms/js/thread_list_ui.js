@@ -284,6 +284,7 @@ var ThreadListUI = {
     // we store the function to kill the previous render on the function itself
     if (thlui_renderThreads.abort) {
       thlui_renderThreads.abort();
+      delete thlui_renderThreads.abort;
     }
 
 
