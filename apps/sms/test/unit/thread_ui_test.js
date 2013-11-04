@@ -2730,9 +2730,11 @@ suite('thread_ui.js >', function() {
 
           window.location.hash = '#thread=1';
 
+          var body = document.createElement('ul');
           ThreadUI.prompt({
             number: '999',
-            isContact: true
+            isContact: true,
+            body: body
           });
 
           assert.equal(MockOptionMenu.calls.length, 1);
@@ -2741,8 +2743,11 @@ suite('thread_ui.js >', function() {
           var items = call.items;
 
           // Ensures that the OptionMenu was given
-          // the phone number to diplay
-          assert.equal(call.header, '999');
+          // the contact informations to be displayed
+          assert.equal(call.section, body);
+
+          // ensures we'll show no header
+          assert.equal(call.header, '');
 
           assert.equal(items.length, 3);
 
