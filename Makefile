@@ -410,7 +410,7 @@ endif
 endif
 
 .PHONY: app-makefiles
-app-makefiles:
+app-makefiles: install-xulrunner-sdk
 	@for d in ${GAIA_APPDIRS}; \
 	do \
 		if [[ ("$$d" =~ "${BUILD_APP_NAME}") || (${BUILD_APP_NAME} == "*") ]]; then \
