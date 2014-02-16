@@ -430,6 +430,7 @@ var ThreadListUI = {
     }
 
     function onThreadsRendered() {
+      /* jshint validthis: true */
       if (this.threadsBatch.length > 0) {
         this.appendThreadsBatch(this.threadsBatch);
         this.threadsBatch = [];

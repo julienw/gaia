@@ -1,5 +1,6 @@
 /*global getMockupedDate */
 /*exported MockThreadList */
+/*exported MockThreadListBySize */
 
 'use strict';
 
