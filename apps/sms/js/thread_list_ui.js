@@ -4,7 +4,7 @@
 /*global Template, Utils, Threads, Contacts, Threads,
          WaitingScreen, MozSmsFilter, MessageManager, TimeHeaders,
          Drafts, Thread, ThreadUI, OptionMenu, ActivityPicker,
-         PerformanceTestingHelper, StickyHeader */
+         PerformanceTestingHelper, StickyHeader, monitorTagVisibility */
 
 /*exported ThreadListUI */
 (function(exports) {
@@ -14,7 +14,11 @@ var ThreadListUI = {
   draftLinks: null,
   draftRegistry: null,
   DRAFT_SAVED_DURATION: 5000,
-
+  INITIAL_RENDER_LIMIT: 20,
+  INITIAL_RENDER_SIZE: 2,
+  BATCH_RENDER_SIZE: 15,
+  monitor: null,
+  
   // Used to track timeouts
   timeouts: {
     onDraftSaved: null
@@ -26,6 +30,27 @@ var ThreadListUI = {
 
   // Set to |true| when in edit mode
   inEditMode: false,
+
+  onRowOnscreen: function thlui_onRowOnscreen(row) {
+    this.setContactIfNotSet(row);
+  },
+
+  onRowOffscreen: function thlui_onRowOffscreen(row) {
+  },
+
+  startMonitor: function thlui_startMonitor() {
+    if (this.monitor) {
+      return;
+    }
+    var scrollMargin = ~~(this.container.getBoundingClientRect().height * 1.5);
+    // NOTE: Making scrollDelta too large will cause janky scrolling
+    //       due to bursts of onscreen() calls from the monitor.
+    var scrollDelta = Math.floor(scrollMargin / 15);
+    this.monitor = monitorTagVisibility(this.container, 'li',
+                                        scrollMargin, scrollDelta,
+                                        this.onRowOnscreen.bind(this),
+                                        this.onRowOffscreen.bind(this));
+  },
 
   init: function thlui_init() {
     this.tmpl = {
@@ -106,6 +131,12 @@ var ThreadListUI = {
     }
   },
 
+  setContactIfNotSet: function thlui_setContactIfNotSet(node) {
+    if (!node.dataset.contactSet) {
+      this.setContact(node);
+    }
+  },
+
   setContact: function thlui_setContact(node) {
     var thread = Threads.get(node.dataset.threadId);
     var draft = Drafts.get(node.dataset.threadId);
@@ -159,6 +190,8 @@ var ThreadListUI = {
       });
 
       photo.style.backgroundImage = 'url(' + src + ')';
+      
+      node.dataset.contactSet = true;
     });
   },
 
@@ -400,9 +433,8 @@ var ThreadListUI = {
           // If there is currently no list item rendered for this
           // draft, then proceed.
           if (!this.draftRegistry[draft.id]) {
-            this.appendThread(
-              Thread.create(draft)
-            );
+            var node = this.appendThread(Thread.create(draft));
+            this.setContact(node);
           }
         }
       }, this);
@@ -417,6 +449,7 @@ var ThreadListUI = {
   },
 
   startRendering: function thlui_startRenderingThreads() {
+    this.count = 0;
     this.setEmpty(false);
   },
 
@@ -436,9 +469,21 @@ var ThreadListUI = {
     PerformanceTestingHelper.dispatch('will-render-threads');
 
     var hasThreads = false;
-    var firstPanelCount = 9; // counted on a Peak
+    var FIRST_PANEL_COUNT = 9; // counted on a Peak
+    var threadsBatch = [];
 
     this.prepareRendering();
+
+    var appendThreads = function() {
+      var delaySetContact = (this.count > this.INITIAL_RENDER_LIMIT);
+      for (var i = 0, l = threadsBatch.length; i < l; i++) {
+        var node = this.appendThread(threadsBatch[i]);
+        if (!delaySetContact) {
+          this.setContact(node);
+        }
+      }
+      threadsBatch.length = 0;
+    }.bind(this);
 
     function onRenderThread(thread) {
       /* jshint validthis: true */
@@ -447,14 +492,30 @@ var ThreadListUI = {
         this.startRendering();
       }
 
-      this.appendThread(thread);
-      if (--firstPanelCount === 0) {
-        PerformanceTestingHelper.dispatch('above-the-fold-ready');
+      threadsBatch.push(thread);
+      this.count++;
+
+      if (this.count === this.INITIAL_RENDER_LIMIT) {
+        this.startMonitor();
+      }
+
+      if ((this.count <= this.INITIAL_RENDER_LIMIT &&
+          threadsBatch.length >= this.INITIAL_RENDER_SIZE) ||
+          threadsBatch.length >= this.BATCH_RENDER_SIZE) {
+        appendThreads();
+        if (this.count >= FIRST_PANEL_COUNT) {
+          PerformanceTestingHelper.dispatch('above-the-fold-ready');
+        }
       }
     }
 
     function onThreadsRendered() {
       /* jshint validthis: true */
+      if (threadsBatch.length > 0) {
+        appendThreads();
+      }
+
+      this.startMonitor();
 
       /* We set the view as empty only if there's no threads and no drafts,
        * this is done to prevent races between renering threads and drafts. */
@@ -612,7 +673,8 @@ var ThreadListUI = {
       // remove the current thread node in order to place the new one properly
       this.removeThread(thread.id);
     }
-    this.appendThread(thread);
+    var node = this.appendThread(thread);
+    this.setContact(node);
     this.setEmpty(false);
     this.sticky.refresh();
   },
@@ -635,9 +697,6 @@ var ThreadListUI = {
 
     // We create the DOM element of the thread
     var node = this.createThread(thread);
-
-    // Update info given a number
-    this.setContact(node);
 
     // Is there any container already?
     var threadsContainerID = 'threadsContainer_' +
@@ -671,6 +730,8 @@ var ThreadListUI = {
     if (this.inEditMode) {
       this.checkInputs();
     }
+    
+    return node;
   },
 
   // Adds a new grouping header if necessary (today, tomorrow, ...)
