@@ -12,7 +12,10 @@ var ThreadListUI = {
   draftLinks: null,
   draftRegistry: null,
   DRAFT_SAVED_DURATION: 5000,
-
+  INITIAL_RENDER_SIZE: 10,
+  BATCH_RENDER_SIZE: 60,
+  threadsBatch: [],
+  
   // Used to track timeouts
   timeouts: {
     onDraftSaved: null
@@ -384,6 +387,8 @@ var ThreadListUI = {
   },
 
   startRendering: function thlui_startRenderingThreads() {
+    this.threadsBatch = [];
+    this.count = 0;
     this.setEmpty(false);
   },
 
@@ -394,6 +399,12 @@ var ThreadListUI = {
 
     if (!empty) {
       TimeHeaders.updateAll('header[data-time-update]');
+    }
+  },
+
+  appendThreadsBatch: function thlui_appendThreadsBatch(threads) {
+    for (var i = 0, l = threads.length; i < l; i++) {
+      this.appendThread(threads[i]);
     }
   },
 
@@ -409,10 +420,21 @@ var ThreadListUI = {
         this.startRendering();
       }
 
-      this.appendThread(thread);
+      this.threadsBatch.push(thread);
+      this.count++;
+      if (this.count === this.INITIAL_RENDER_SIZE ||
+          this.threadsBatch.length >= this.BATCH_RENDER_SIZE) {
+        this.appendThreadsBatch(this.threadsBatch);
+        this.threadsBatch = [];
+      }
     }
 
     function onThreadsRendered() {
+      if (this.threadsBatch.length > 0) {
+        this.appendThreadsBatch(this.threadsBatch);
+        this.threadsBatch = [];
+      }
+      
       /* jshint validthis: true */
 
       /* We set the view as empty only if there's no threads and no drafts,
