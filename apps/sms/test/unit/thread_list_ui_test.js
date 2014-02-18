@@ -804,16 +804,12 @@ suite('thread_list_ui', function() {
         function(options) {
           var threadsMockup = new MockThreadList();
 
-          var each = options.each;
-          var end = options.end;
-          var done = options.done;
-
           for (var i = 0; i < threadsMockup.length; i++) {
-            each && each(threadsMockup[i]);
+            options.each && options.each(threadsMockup[i]);
           }
 
-          end && end();
-          done && done();
+          options.end && options.end();
+          options.done && options.done();
 
           // Check that the right number of threads are inserted
           var threads = container.querySelectorAll(

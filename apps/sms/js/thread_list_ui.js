@@ -387,7 +387,7 @@ var ThreadListUI = {
   },
 
   startRendering: function thlui_startRenderingThreads() {
-    this.threadsBatch = [];
+    this.threadsBatch.length = 0;
     this.count = 0;
     this.setEmpty(false);
   },
@@ -402,7 +402,7 @@ var ThreadListUI = {
     }
   },
 
-  appendThreadsBatch: function thlui_appendThreadsBatch(threads) {
+  appendThreads: function thlui_appendThreads(threads) {
     for (var i = 0, l = threads.length; i < l; i++) {
       this.appendThread(threads[i]);
     }
@@ -424,19 +424,17 @@ var ThreadListUI = {
       this.count++;
       if (this.count === this.INITIAL_RENDER_SIZE ||
           this.threadsBatch.length >= this.BATCH_RENDER_SIZE) {
-        this.appendThreadsBatch(this.threadsBatch);
-        this.threadsBatch = [];
+        this.appendThreads(this.threadsBatch);
+        this.threadsBatch.length = 0;
       }
     }
 
     function onThreadsRendered() {
       /* jshint validthis: true */
       if (this.threadsBatch.length > 0) {
-        this.appendThreadsBatch(this.threadsBatch);
-        this.threadsBatch = [];
+        this.appendThreads(this.threadsBatch);
+        this.threadsBatch.length = 0;
       }
-      
-      /* jshint validthis: true */
 
       /* We set the view as empty only if there's no threads and no drafts,
        * this is done to prevent races between renering threads and drafts. */

@@ -55,12 +55,12 @@ function MockThreadList() {
 
 function MockThreadListBySize(size) {
   var threadTemplate = {
-      id: 1,
-      participants: ['1977'],
-      lastMessageType: 'sms',
-      body: 'Bogus Message',
-      timestamp: +getMockupedDate(0),
-      unreadCount: 0
+    id: 1,
+    participants: ['1977'],
+    lastMessageType: 'sms',
+    body: 'Bogus Message',
+    timestamp: +getMockupedDate(0),
+    unreadCount: 0
   };
 
   var threadList = [];
