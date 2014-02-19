@@ -611,7 +611,7 @@ var Compose = (function() {
       // Mimick the DOMRequest API
       var requestProxy = {};
       var activityData = {
-        type: ['image/*', 'audio/*', 'video/*']
+        type: ['image/*', 'audio/*', 'video/*', 'wallpaper']
       };
       var activity;
 
