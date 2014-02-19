@@ -12,8 +12,9 @@ var ThreadListUI = {
   draftLinks: null,
   draftRegistry: null,
   DRAFT_SAVED_DURATION: 5000,
-  INITIAL_RENDER_SIZE: 10,
-  BATCH_RENDER_SIZE: 60,
+  INITIAL_RENDER_LIMIT: 10,
+  INITIAL_RENDER_SIZE: 2,
+  BATCH_RENDER_SIZE: 10,
   threadsBatch: [],
   
   // Used to track timeouts
@@ -422,7 +423,8 @@ var ThreadListUI = {
 
       this.threadsBatch.push(thread);
       this.count++;
-      if (this.count === this.INITIAL_RENDER_SIZE ||
+      if ((this.count <= this.INITIAL_RENDER_LIMIT &&
+          this.threadsBatch.length >= this.INITIAL_RENDER_SIZE) ||
           this.threadsBatch.length >= this.BATCH_RENDER_SIZE) {
         this.appendThreads(this.threadsBatch);
         this.threadsBatch.length = 0;
