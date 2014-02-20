@@ -1,7 +1,7 @@
 /*global mocha, MocksHelper, loadBodyHTML, MockL10n, ThreadListUI,
          MessageManager, WaitingScreen, Threads, Template, MockMessages,
          MockThreadList, MockThreadListBySize, MockTimeHeaders,
-         Draft, Drafts, Thread, ThreadUI
+         Draft, Drafts, Thread, ThreadUI, MockOptionMenu
          */
 
 'use strict';
