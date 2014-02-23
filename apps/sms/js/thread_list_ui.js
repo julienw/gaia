@@ -12,11 +12,12 @@ var ThreadListUI = {
   draftLinks: null,
   draftRegistry: null,
   DRAFT_SAVED_DURATION: 5000,
-  INITIAL_RENDER_LIMIT: 10,
+  INITIAL_RENDER_LIMIT: 20,
   INITIAL_RENDER_SIZE: 2,
-  BATCH_RENDER_SIZE: 10,
+  BATCH_RENDER_SIZE: 15,
   threadsBatch: [],
-  
+  monitor: null,
+
   // Used to track timeouts
   timeouts: {
     onDraftSaved: null
@@ -28,6 +29,24 @@ var ThreadListUI = {
 
   // Set to |true| when in edit mode
   inEditMode: false,
+
+  onscreen: function thlui_onscreen(row) {
+    this.setContact(row);
+  },
+
+  offscreen: function thlui_offscreen(row) {
+  },
+
+  startMonitor: function thlui_startMonitor() {
+    var scrollMargin = ~~(this.container.getBoundingClientRect().height * 1.5);
+    // NOTE: Making scrollDelta too large will cause janky scrolling
+    //       due to bursts of onscreen() calls from the monitor.
+    var scrollDelta = ~~(scrollMargin / 15);
+    this.monitor = monitorTagVisibility(this.container, 'li',
+                                        scrollMargin, scrollDelta,
+                                        this.onscreen.bind(this),
+                                        this.offscreen.bind(this));
+  },
 
   init: function thlui_init() {
     this.tmpl = {
@@ -106,6 +125,10 @@ var ThreadListUI = {
   },
 
   setContact: function thlui_setContact(node) {
+    if (node.dataset.contactSet) {
+      return;
+    }
+    
     var thread = Threads.get(node.dataset.threadId);
     var draft = Drafts.get(node.dataset.threadId);
     var number, others;
@@ -160,6 +183,8 @@ var ThreadListUI = {
       });
 
       photo.src = src;
+      
+      node.dataset.contactSet = true;
     });
   },
 
@@ -374,7 +399,7 @@ var ThreadListUI = {
           // draft, then proceed.
           if (!this.draftRegistry[draft.id]) {
             this.appendThread(
-              Thread.create(draft)
+              Thread.create(draft), true
             );
           }
         }
@@ -403,9 +428,9 @@ var ThreadListUI = {
     }
   },
 
-  appendThreads: function thlui_appendThreads(threads) {
+  appendThreads: function thlui_appendThreads(threads, setContactNow) {
     for (var i = 0, l = threads.length; i < l; i++) {
-      this.appendThread(threads[i]);
+      this.appendThread(threads[i], setContactNow);
     }
   },
 
@@ -423,10 +448,15 @@ var ThreadListUI = {
 
       this.threadsBatch.push(thread);
       this.count++;
+
+      if (this.count === this.INITIAL_RENDER_LIMIT) {
+        this.startMonitor();
+      }
+
       if ((this.count <= this.INITIAL_RENDER_LIMIT &&
           this.threadsBatch.length >= this.INITIAL_RENDER_SIZE) ||
           this.threadsBatch.length >= this.BATCH_RENDER_SIZE) {
-        this.appendThreads(this.threadsBatch);
+        this.appendThreads(this.threadsBatch, this.count <= this.INITIAL_RENDER_LIMIT);
         this.threadsBatch.length = 0;
       }
     }
@@ -434,7 +464,7 @@ var ThreadListUI = {
     function onThreadsRendered() {
       /* jshint validthis: true */
       if (this.threadsBatch.length > 0) {
-        this.appendThreads(this.threadsBatch);
+        this.appendThreads(this.threadsBatch, this.count <= this.INITIAL_RENDER_LIMIT);
         this.threadsBatch.length = 0;
       }
 
@@ -583,7 +613,7 @@ var ThreadListUI = {
       if (node) {
         this.removeThread(thread.id);
       }
-      this.appendThread(thread);
+      this.appendThread(thread, true);
       this.setEmpty(false);
     }
   },
@@ -596,7 +626,7 @@ var ThreadListUI = {
     this.updateThread(message, {read: false});
   },
 
-  appendThread: function thlui_appendThread(thread) {
+  appendThread: function thlui_appendThread(thread, setContactNow) {
     var timestamp = +thread.timestamp;
     var drafts = Drafts.byThreadId(thread.id);
 
@@ -607,8 +637,10 @@ var ThreadListUI = {
     // We create the DOM element of the thread
     var node = this.createThread(thread);
 
-    // Update info given a number
-    this.setContact(node);
+    if (setContactNow) {
+      // Update info given a number
+      this.setContact(node);
+    }
 
     // Is there any container already?
     var threadsContainerID = 'threadsContainer_' +
