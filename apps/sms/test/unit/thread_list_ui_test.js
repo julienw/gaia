@@ -27,6 +27,7 @@ requireApp('sms/test/unit/mock_waiting_screen.js');
 require('/test/unit/thread_list_mockup.js');
 require('/test/unit/utils_mockup.js');
 requireApp('sms/test/unit/mock_thread_ui.js');
+require('/shared/test/unit/mocks/mock_performance_testing_helper.js');
 
 var mocksHelperForThreadListUI = new MocksHelper([
   'asyncStorage',
@@ -35,7 +36,8 @@ var mocksHelperForThreadListUI = new MocksHelper([
   'Utils',
   'WaitingScreen',
   'TimeHeaders',
-  'ThreadUI'
+  'ThreadUI',
+  'PerformanceTestingHelper'
 ]).init();
 
 suite('thread_list_ui', function() {

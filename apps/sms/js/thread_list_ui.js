@@ -4,6 +4,7 @@
 /*global Template, Utils, Threads, Contacts, URL, Threads,
          WaitingScreen, MozSmsFilter, MessageManager, TimeHeaders,
          Drafts, Thread, ThreadUI */
+
 /*exported ThreadListUI */
 (function(exports) {
 'use strict';
@@ -435,7 +436,10 @@ var ThreadListUI = {
   },
 
   renderThreads: function thlui_renderThreads(done) {
+    PerformanceTestingHelper.dispatch('will-render-threads');
+
     var hasThreads = false;
+    var firstPanelCount = 9; // counted on a Peak
 
     this.prepareRendering();
 
@@ -458,6 +462,9 @@ var ThreadListUI = {
           this.threadsBatch.length >= this.BATCH_RENDER_SIZE) {
         this.appendThreads(this.threadsBatch, this.count <= this.INITIAL_RENDER_LIMIT);
         this.threadsBatch.length = 0;
+        if (this.count >= firstPanelCount) {
+          PerformanceTestingHelper.dispatch('above-the-fold-ready');
+        }
       }
     }
 
@@ -471,6 +478,9 @@ var ThreadListUI = {
       /* We set the view as empty only if there's no threads and no drafts,
        * this is done to prevent races between renering threads and drafts. */
       this.finalizeRendering(!(hasThreads || Drafts.size));
+
+      PerformanceTestingHelper.dispatch('startup-path-done');
+      console.log('>>> dispatched startup path done');
     }
 
     var renderingOptions = {

@@ -19,8 +19,7 @@ requireApp('communications/contacts/test/unit/mock_extfb.js');
 requireApp('communications/contacts/test/unit/mock_activities.js');
 requireApp('communications/contacts/test/unit/mock_utils.js');
 requireApp('communications/contacts/test/unit/mock_mozContacts.js');
-requireApp(
-        'communications/contacts/test/unit/mock_performance_testing_helper.js');
+require('/shared/test/unit/mocks/mock_performance_testing_helper.js');
 
 // We're going to swap those with mock objects
 // so we need to make sure they are defined.

@@ -7,7 +7,7 @@ var MarionetteHelper = requireGaia('/tests/js-marionette/helper.js');
 
 // This test is only for communications/contacts for now.
 // XXX extend to more apps.
-var whitelistedApps = ['communications/contacts'];
+var whitelistedApps = ['communications/contacts', 'sms'];
 if (whitelistedApps.indexOf(mozTestInfo.appPath) === -1) {
   return;
 }
