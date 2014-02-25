@@ -33,12 +33,13 @@ suite('Settings >', function() {
   });
 
   suite('Without mozSettings', function() {
-    setup(function() {
+    setup(function(done) {
       navigator.mozSettings = null;
       Settings.mmsSizeLimitation = 'whatever is default';
       Settings.mmsServiceId = 'no service ID';
 
-      Settings.init();
+      // using "then" ensures that init returns a resolved promise
+      Settings.init().then(done);
     });
 
     test('Query size limitation without settings', function() {
@@ -47,6 +48,10 @@ suite('Settings >', function() {
 
     test('Query mmsServiceId without settings', function() {
       assert.equal(Settings.mmsServiceId, 'no service ID');
+    });
+
+    test('Settings is ready', function(done) {
+      Settings.whenReady().then(done);
     });
 
     test('Reports no dual SIM', function() {
@@ -191,6 +196,78 @@ suite('Settings >', function() {
 
       assert.isTrue(Settings.hasSeveralSim());
       assert.isTrue(Settings.isDualSimDevice());
+    });
+
+    suite('Ready resolution >', function() {
+      setup(function() {
+        navigator.mozMobileConnections = [
+          { iccId: 'SIM 1' },
+          { iccId: 'SIM 2' }
+        ];
+
+        Settings.init();
+      });
+
+      suite('Not ready when some setting is missing >', function() {
+        // calling "done" twice makes mocha report an error
+        test('no setting was retrieved', function(done) {
+          Settings.whenReady().then(function() {
+            done(new Error('Should not be ready'));
+          });
+
+          done();
+        });
+
+        test('only the size limitation', function(done) {
+          Settings.whenReady().then(function() {
+            done(new Error('Should not be ready'));
+          });
+
+          var serviceIdReq = findSettingsReq(Settings.MMS_SERVICE_ID_KEY);
+          serviceIdReq.result = {
+            'ril.mms.defaultServiceId': 0
+          };
+
+          serviceIdReq.onsuccess();
+
+          done();
+        });
+
+
+        test('only the service id', function(done) {
+          Settings.whenReady().then(function() {
+            done(new Error('Should not be ready'));
+          });
+
+          var sizeReq = findSettingsReq('dom.mms.operatorSizeLimitation');
+          sizeReq.result = {
+            'dom.mms.operatorSizeLimitation': 300
+          };
+          sizeReq.onsuccess();
+
+          done();
+        });
+      });
+
+      test('Ready when all settings are retrieved', function(done) {
+        Settings.init();
+
+        Settings.whenReady().then(done);
+
+        var serviceIdReq = findSettingsReq(Settings.MMS_SERVICE_ID_KEY);
+
+        serviceIdReq.result = {
+          'ril.mms.defaultServiceId': 0
+        };
+
+        serviceIdReq.onsuccess();
+
+        var sizeReq = findSettingsReq('dom.mms.operatorSizeLimitation');
+        sizeReq.result = {
+          'dom.mms.operatorSizeLimitation': 300
+        };
+        sizeReq.onsuccess();
+      });
     });
 
     test('mmsServiceId observer and update', function() {

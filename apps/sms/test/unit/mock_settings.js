@@ -7,6 +7,7 @@ var MockSettings = {
   nonActivateMmsServiceIds: [],
   setSimServiceId: function() {},
   switchSimHandler: function() {},
+  whenReady: function() { return Promise.resolve(); },
   isDualSimDevice: function() { return false; },
   hasSeveralSim: function() { return false; },
   getSimNameByIccId: function(id) { return 'sim-name-' + id; },

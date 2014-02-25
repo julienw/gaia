@@ -381,24 +381,28 @@ var ActivityHandler = {
         function continueWithNotification(sender, body) {
           var _ = navigator.mozL10n.get;
 
-          var title = sender;
-          if (Settings.hasSeveralSim() && message.iccId) {
-            var simName = Settings.getSimNameByIccId(message.iccId);
-            title = _(
-              'dsds-notification-title-with-sim',
-              { sim: simName, sender: sender }
-            );
-          }
+          Settings.whenReady().then(function() {
+            var title = sender;
+            if (Settings.hasSeveralSim() && message.iccId) {
+              var simName = Settings.getSimNameByIccId(message.iccId);
+              title = _(
+                'dsds-notification-title-with-sim',
+                { sim: simName, sender: sender }
+              );
+            }
 
-          var options = {
-            icon: iconURL,
-            body: body,
-            tag: 'threadId:' + threadId
-          };
+            var options = {
+              icon: iconURL,
+              body: body,
+              tag: 'threadId:' + threadId
+            };
 
-          var notification = new Notification(title, options);
-          notification.addEventListener('click', goToMessage);
-          releaseWakeLock();
+            var notification = new Notification(title, options);
+            notification.addEventListener('click', goToMessage);
+            releaseWakeLock();
+          }).catch(function(e) {
+            console.error(e);
+          });
         }
 
         function getTitleFromMms(callback) {

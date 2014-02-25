@@ -163,8 +163,12 @@ suite('ActivityHandler', function() {
 
   suite('sms received', function() {
     var message;
+    var readyPromise;
 
     setup(function() {
+      readyPromise = Promise.resolve();
+      this.sinon.stub(Settings, 'whenReady').returns(readyPromise);
+
       message = MockMessages.sms();
       MockNavigatormozSetMessageHandler.mTrigger('sms-received', message);
     });
@@ -178,12 +182,13 @@ suite('ActivityHandler', function() {
     suite('contact retrieved (after getSelf)', function() {
       var contactName = '<&>'; // testing potentially unsafe characters
       var sendSpy;
-      setup(function() {
+      setup(function(done) {
         sendSpy = this.sinon.spy(window, 'Notification');
         this.sinon.stub(Contacts, 'findByPhoneNumber')
           .yields([{name: [contactName]}]);
 
         MockNavigatormozApps.mTriggerLastRequestSuccess();
+        readyPromise.then(done);
       });
 
       test('passes contact name in plain text', function() {
@@ -197,7 +202,7 @@ suite('ActivityHandler', function() {
       var phoneNumber = '+1111111111';
       var sendSpy;
 
-      setup(function() {
+      setup(function(done) {
         sendSpy = this.sinon.spy(window, 'Notification');
         message.sender = phoneNumber;
         this.sinon.stub(Contacts, 'findByPhoneNumber')
@@ -206,6 +211,7 @@ suite('ActivityHandler', function() {
             tel: {'value': phoneNumber}
           }]);
         MockNavigatormozApps.mTriggerLastRequestSuccess();
+        readyPromise.then(done);
       });
 
       test('phone in notification title when contact without name', function() {
@@ -217,9 +223,10 @@ suite('ActivityHandler', function() {
 
     suite('after getSelf', function() {
       var sendSpy;
-      setup(function() {
+      setup(function(done) {
         sendSpy = this.sinon.spy(window, 'Notification');
         MockNavigatormozApps.mTriggerLastRequestSuccess();
+        readyPromise.then(done);
       });
 
       test('a notification is sent', function() {
@@ -287,8 +294,12 @@ suite('ActivityHandler', function() {
 
   suite('Dual SIM behavior >', function() {
     var message;
+    var readyPromise;
 
     setup(function() {
+      readyPromise = Promise.resolve();
+      this.sinon.stub(Settings, 'whenReady').returns(readyPromise);
+
       message = MockMessages.sms({
         iccId: '0'
       });
@@ -301,11 +312,12 @@ suite('ActivityHandler', function() {
 
     suite('contact retrieved (after getSelf)', function() {
       var contactName = 'contact';
-      setup(function() {
+      setup(function(done) {
         this.sinon.stub(Contacts, 'findByPhoneNumber')
           .yields([{name: [contactName]}]);
 
         MockNavigatormozApps.mTriggerLastRequestSuccess();
+        readyPromise.then(done);
       });
 
       test('prefix the contact name with the SIM information', function() {
@@ -318,7 +330,7 @@ suite('ActivityHandler', function() {
     suite('contact without name (after getSelf)', function() {
       var phoneNumber = '+1111111111';
 
-      setup(function() {
+      setup(function(done) {
         message.sender = phoneNumber;
         this.sinon.stub(Contacts, 'findByPhoneNumber')
           .yields([{
@@ -326,6 +338,7 @@ suite('ActivityHandler', function() {
             tel: {value: phoneNumber}
           }]);
         MockNavigatormozApps.mTriggerLastRequestSuccess();
+        readyPromise.then(done);
       });
 
       test('phone in notification title when contact without name', function() {
