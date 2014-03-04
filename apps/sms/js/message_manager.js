@@ -4,7 +4,7 @@
 /*global ThreadListUI, ThreadUI, Threads, SMIL, MozSmsFilter, Compose,
          Utils, LinkActionHandler, Contacts, GroupView,
          ReportView, Utils, LinkActionHandler, Contacts, Drafts,
-         Notification */
+         Notification, Settings */
 
 /*exported MessageManager */
 
@@ -170,6 +170,8 @@ var MessageManager = {
     }
 
     this.threadMessages.classList.add('new');
+
+    ThreadUI.onBeforeEnter();
     this.slide('left', function() {
       callback && callback();
     });
@@ -352,6 +354,8 @@ var MessageManager = {
             }
           );
 
+        ThreadUI.onBeforeEnter();
+
         // Update Header
         ThreadUI.updateHeaderData(function headerUpdated() {
           if (willSlide) {
@@ -467,9 +471,13 @@ var MessageManager = {
   },
 
   // consider splitting this method for the different use cases
-  sendSMS: function mm_send(recipients, content,
-                            onsuccess, onerror, oncomplete) {
-    var requests;
+  sendSMS: function mm_send(opts) {
+    var recipients = opts.recipients || [],
+        content = opts.content,
+        serviceId = opts.serviceId,
+        onsuccess = opts.onsuccess,
+        onerror = opts.onerror,
+        oncomplete = opts.oncomplete;
 
     if (!Array.isArray(recipients)) {
       recipients = [recipients];
@@ -479,8 +487,14 @@ var MessageManager = {
     // Instead, It's an array of DOM requests.
     var i = 0;
     var requestResult = { hasError: false, return: [] };
+    var sendOpts;
+    if (serviceId != null && // not null, not undefined
+        Settings.hasSeveralSim()) {
+      sendOpts = { serviceId: serviceId };
+    }
 
-    requests = this._mozMobileMessage.send(recipients, content);
+    var requests = this._mozMobileMessage.send(recipients, content, sendOpts);
+
     var numberOfRequests = requests.length;
 
     requests.forEach(function(request, idx) {
@@ -518,12 +532,26 @@ var MessageManager = {
     });
   },
 
-  sendMMS:
-    function mm_sendMMS(mmsMessage, onsuccess, onerror) {
+  sendMMS: function mm_sendMMS(opts) {
+    var serviceId = opts.serviceId;
+
+    if (serviceId != null && // not null, not undefined
+        Settings.hasSeveralSim() &&
+        serviceId !== Settings.mmsServiceId) {
+      Settings.switchMmsSimHandler(serviceId, this.doSendMMS.bind(this, opts));
+    } else {
+      this.doSendMMS(opts);
+    }
+  },
+
+  doSendMMS: function mm_doSendMMS(opts) {
     var request;
-    var recipients = mmsMessage.recipients,
-        subject = mmsMessage.subject,
-        content = mmsMessage.content;
+    var recipients = opts.recipients,
+        subject = opts.subject,
+        content = opts.content,
+        serviceId = opts.serviceId,
+        onsuccess = opts.onsuccess,
+        onerror = opts.onerror;
 
     if (!Array.isArray(recipients)) {
       recipients = [recipients];
@@ -531,12 +559,18 @@ var MessageManager = {
 
     var message = SMIL.generate(content);
 
+    var sendOpts;
+    if (serviceId != null && // not null, not undefined
+        Settings.hasSeveralSim()) {
+      sendOpts = { serviceId: serviceId };
+    }
+
     request = this._mozMobileMessage.sendMMS({
       receivers: recipients,
       subject: subject,
       smil: message.smil,
       attachments: message.attachments
-    });
+    }, sendOpts);
 
     request.onsuccess = function onSuccess(event) {
       onsuccess && onsuccess(event.target.result);

@@ -94,7 +94,8 @@ var ThreadUI = global.ThreadUI = {
       'contact-pick-button', 'back-button', 'send-button', 'attach-button',
       'delete-button', 'cancel-button', 'subject-input', 'new-message-notice',
       'options-icon', 'edit-mode', 'edit-form', 'tel-form', 'header-text',
-      'max-length-notice', 'convert-notice', 'resize-notice'
+      'max-length-notice', 'convert-notice', 'resize-notice',
+      'dual-sim-information'
     ].forEach(function(id) {
       this[Utils.camelCase(id)] = document.getElementById('messages-' + id);
     }, this);
@@ -317,6 +318,20 @@ var ThreadUI = global.ThreadUI = {
         ThreadUI.saveDraft({preserve: true, autoSave: true});
         Drafts.store();
       }
+    }
+  },
+
+  onBeforeEnter: function thui_onBeforeEnter() {
+    if (Settings.hasSeveralSim()) {
+      navigator.mozL10n.localize(
+        this.dualSimInformation,
+        'sim-name',
+        { id: Settings.smsServiceId + 1 }
+      );
+      this.composeForm.classList.add('dual-sim-configuration');
+    } else {
+      navigator.mozL10n.localize(this.dualSimInformation);
+      this.composeForm.classList.remove('dual-sim-configuration');
     }
   },
 
@@ -2095,9 +2110,13 @@ var ThreadUI = global.ThreadUI = {
     // not sure why this happens - replace me if you know
     this.container.classList.remove('hide');
 
-    var content = Compose.getContent();
-    var subject = Compose.getSubject();
+    this.sendMessage({ serviceId: Settings.smsServiceId });
+  },
+
+  sendMessage: function thui_sendMessage(opts) {
+    var serviceId = opts && opts.serviceId;
     var messageType = Compose.type;
+
     var inComposer = window.location.hash === '#new';
     var recipients;
 
@@ -2110,6 +2129,35 @@ var ThreadUI = global.ThreadUI = {
     } else {
       recipients = Threads.active.participants;
     }
+
+    var doSendMessage = function doSendMessage() {
+      this.doSendMessage({
+        content: Compose.getContent(),
+        subject: Compose.getSubject(),
+        messageType: Compose.type,
+        recipients: recipients,
+        serviceId: serviceId,
+      });
+    }.bind(this);
+
+    if (messageType === 'sms' ||
+      serviceId === Settings.mmsServiceId) {
+      doSendMessage();
+    } else {
+      this.showMessageError(
+        'NonActiveSimCardToSendError', { confirmHandler: doSendMessage }
+      );
+    }
+  },
+
+  doSendMessage: function thui_sendMessage(opts) {
+    var content = opts.content,
+        subject = opts.subject,
+        messageType = opts.messageType,
+        recipients = opts.recipients,
+        serviceId = opts.serviceId === undefined ? null : opts.serviceId;
+
+    var inComposer = window.location.hash === '#new';
 
     // Clean composer fields (this lock any repeated click in 'send' button)
     this.cleanFields(true);
@@ -2129,8 +2177,11 @@ var ThreadUI = global.ThreadUI = {
 
     // Send the Message
     if (messageType === 'sms') {
-      MessageManager.sendSMS(recipients, content[0], null, null,
-        function onComplete(requestResult) {
+      MessageManager.sendSMS({
+        recipients: recipients,
+        content: content[0],
+        serviceId: serviceId,
+        oncomplete: function onComplete(requestResult) {
           if (requestResult.hasError) {
             var errors = {};
             requestResult.return.forEach(function(result) {
@@ -2150,7 +2201,7 @@ var ThreadUI = global.ThreadUI = {
             }
           }
         }.bind(this)
-      );
+      });
 
       if (recipients.length > 1) {
         this.shouldChangePanelNextEvent = false;
@@ -2162,14 +2213,12 @@ var ThreadUI = global.ThreadUI = {
 
     } else {
       var smilSlides = content.reduce(thui_generateSmilSlides, []);
-      var mmsMessage = {
+      var mmsOpts = {
         recipients: recipients,
         subject: subject,
-        content: smilSlides
-      };
-
-      MessageManager.sendMMS(mmsMessage, null,
-        function onError(error) {
+        content: smilSlides,
+        serviceId: serviceId,
+        onerror: function onError(error) {
           var errorName = error.name;
           if (errorName === 'NotFoundError') {
             console.info('The message was deleted or is no longer available.');
@@ -2177,7 +2226,9 @@ var ThreadUI = global.ThreadUI = {
           }
           this.showMessageError(errorName);
         }.bind(this)
-      );
+      };
+
+      MessageManager.sendMMS(mmsOpts);
     }
   },
 
@@ -2314,7 +2365,7 @@ var ThreadUI = global.ThreadUI = {
               return;
             }
 
-            Settings.switchSimHandler(serviceId,
+            Settings.switchMmsSimHandler(serviceId,
               this.retrieveMMS.bind(this, messageDOM));
           }.bind(this)
         });
