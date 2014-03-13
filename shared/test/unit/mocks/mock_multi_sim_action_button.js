@@ -10,7 +10,8 @@ var MockMultiSimActionButtonSingleton = {
   _phoneNumberGetter: null
 };
 
-var MockMultiSimActionButton = function(button, phoneNumberGetter) {
+var MockMultiSimActionButton =
+  function(button, simSelectedCallback, settingsKey, phoneNumberGetter) {
   MockMultiSimActionButtonSingleton.isInitialized = true;
   MockMultiSimActionButtonSingleton._phoneNumberGetter = phoneNumberGetter;
 

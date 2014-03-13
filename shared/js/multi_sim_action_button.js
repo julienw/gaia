@@ -7,16 +7,16 @@
 const ALWAYS_ASK_OPTION_VALUE = '-1';
 
 var MultiSimActionButton = function MultiSimActionButton(
-  button, phoneNumberGetter, callCallback, settingsKey) {
-  this._phoneNumberGetter = phoneNumberGetter;
+  button, callCallback, settingsKey, phoneNumberGetter) {
+  this._button = button;
   this._callCallback = callCallback;
   this._settingsKey = settingsKey || 'ril.telephony.defaultServiceId';
-  this._button = button;
+  this._phoneNumberGetter = phoneNumberGetter;
 
   this._button.addEventListener('click', this._click.bind(this));
 
   if (window.navigator.mozIccManager &&
-      window.navigator.mozIccManager.iccIds.length >= 0) {
+      window.navigator.mozIccManager.iccIds.length > 1) {
     this._button.addEventListener('contextmenu', this._contextmenu.bind(this));
 
     var self = this;
@@ -73,7 +73,7 @@ MultiSimActionButton.prototype._click = function cb_click(event) {
 MultiSimActionButton.prototype._updateUI = function cb_updateUI(cardIndex) {
   if (cardIndex >= 0 &&
       window.navigator.mozIccManager &&
-      window.navigator.mozIccManager.iccIds.length >= 0) {
+      window.navigator.mozIccManager.iccIds.length > 1) {
     if (this._simIndication) {
       var self = this;
       navigator.mozL10n.ready(function() {

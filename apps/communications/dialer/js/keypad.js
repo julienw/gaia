@@ -147,16 +147,16 @@ var KeypadManager = {
           LazyL10n.get(function localized(_) {
             self.multiSimActionButton =
               new MultiSimActionButton(self.callBarCallAction,
-                                       self.phoneNumber.bind(self),
                                        CallHandler.call,
-                                       'ril.telephony.defaultServiceId');
+                                       'ril.telephony.defaultServiceId',
+                                       self.phoneNumber.bind(self));
           });
         } else {
           this.multiSimActionButton =
             new MultiSimActionButton(this.callBarCallAction,
-                                     this.phoneNumber.bind(this),
                                      CallHandler.call,
-                                     'ril.telephony.defaultServiceId');
+                                     'ril.telephony.defaultServiceId',
+                                     this.phoneNumber.bind(this));
         }
       }
       this.callBarCallAction.addEventListener('click',

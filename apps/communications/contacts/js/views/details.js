@@ -443,8 +443,9 @@ contacts.Details = (function() {
           ActivityHandler.activityName !== 'open' || MmiManager.isMMI(number)) {
           button.addEventListener('click', onPhoneExtraClicked);
         } else if (navigator.mozTelephony) {
-          new MultiSimActionButton(button, function() {return number},
-           TelephonyHelper.call);
+          new MultiSimActionButton(button, TelephonyHelper.call,
+                                   function() {return number},
+                                   'ril.telephony.defaultServiceId');
         }
     });
   }

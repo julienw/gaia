@@ -168,7 +168,6 @@ var ThreadUI = global.ThreadUI = {
 
     this.multiSimActionButton =
       new MultiSimActionButton(this.sendButton,
-                               null,
                                this.simSelectedCallback.bind(this),
                                'ril.sms.defaultServiceId');
     this.sendButton.addEventListener(
