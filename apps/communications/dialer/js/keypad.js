@@ -1,9 +1,8 @@
 /* exported KeypadManager */
 
-/* globals CallHandler, CallLogDBManager, CallsHandler, CallScreen, LazyLoader,
-           MultiSimActionButton, PhoneNumberActionMenu, SettingsListener,
-           TonePlayer, Utils
-*/
+/* globals CallHandler, CallLogDBManager, CallsHandler, CallScreen,
+           LazyLoader, LazyL10n, MultiSimActionButton, PhoneNumberActionMenu,
+           SimPicker, SettingsListener, TonePlayer, Utils */
 
 'use strict';
 
@@ -149,16 +148,16 @@ var KeypadManager = {
           LazyL10n.get(function localized(_) {
             self.multiSimActionButton =
               new MultiSimActionButton(self.callBarCallAction,
-                                       self.phoneNumber.bind(self),
                                        CallHandler.call,
-                                       'ril.telephony.defaultServiceId');
+                                       'ril.telephony.defaultServiceId',
+                                       self.phoneNumber.bind(self));
           });
         } else {
           this.multiSimActionButton =
             new MultiSimActionButton(this.callBarCallAction,
-                                     this.phoneNumber.bind(this),
                                      CallHandler.call,
-                                     'ril.telephony.defaultServiceId');
+                                     'ril.telephony.defaultServiceId',
+                                     this.phoneNumber.bind(this));
         }
       }
       this.callBarCallAction.addEventListener('click',

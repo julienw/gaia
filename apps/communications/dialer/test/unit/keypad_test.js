@@ -1,7 +1,8 @@
-/* globals CallLogDBManager, gTonesFrequencies, KeypadManager, MockCall,
-           MockMultiSimActionButton, MockCallsHandler, MockDialerIndexHtml,
-           MockMozTelephony, MockSettingsListener, MocksHelper, MockTonePlayer,
-           MultiSimActionButton, telephonyAddCall
+/* globals CallHandler, CallLogDBManager, gTonesFrequencies, KeypadManager,
+           MockCall, MockCallsHandler, MockDialerIndexHtml, MockIccManager,
+           MockMozTelephony, MockMultiSimActionButtonSingleton,
+           MockNavigatorSettings, MockSettingsListener, MocksHelper,
+           MockTonePlayer, SimPicker, telephonyAddCall
 */
 
 'use strict';

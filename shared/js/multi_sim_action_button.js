@@ -7,11 +7,11 @@
 const ALWAYS_ASK_OPTION_VALUE = '-1';
 
 var MultiSimActionButton = function MultiSimActionButton(
-  button, phoneNumberGetter, callCallback, settingsKey) {
-  this._phoneNumberGetter = phoneNumberGetter;
+  button, callCallback, settingsKey, phoneNumberGetter) {
+  this._button = button;
   this._callCallback = callCallback;
   this._settingsKey = settingsKey || 'ril.telephony.defaultServiceId';
-  this._button = button;
+  this._phoneNumberGetter = phoneNumberGetter;
 
   this._button.addEventListener('click', this._click.bind(this));
 
@@ -46,7 +46,7 @@ MultiSimActionButton.prototype._click = function cb_click(event) {
     event.preventDefault();
   }
 
-  var phoneNumber = this._phoneNumberGetter();
+  var phoneNumber = this._phoneNumberGetter && this._phoneNumberGetter();
   if (!window.navigator.mozIccManager || phoneNumber === '') {
     return;
   }
@@ -92,10 +92,11 @@ MultiSimActionButton.prototype._contextmenu = function cb_contextmenu(event) {
   // Don't do anything, including preventDefaulting the event, if the phone
   // number is blank. We don't want to preventDefault because we want the
   // contextmenu event to generate a click.
-  var phoneNumber = this._phoneNumberGetter();
+  var phoneNumber = this._phoneNumberGetter && this._phoneNumberGetter();
   if (!window.navigator.mozIccManager ||
-      window.navigator.mozIccManager.iccIds.length === 1 ||
-      phoneNumber === '') {
+      window.navigator.mozIccManager.iccIds.length === 0 ||
+      phoneNumber === '' ||
+      event.target.disabled) {
     return;
   }
 
@@ -113,7 +114,7 @@ MultiSimActionButton.prototype._contextmenu = function cb_contextmenu(event) {
 
 MultiSimActionButton.prototype.performAction =
   function cb_performAction(cardIndex) {
-  var phoneNumber = this._phoneNumberGetter();
+  var phoneNumber = this._phoneNumberGetter && this._phoneNumberGetter();
   if (phoneNumber === '') {
     return;
   }

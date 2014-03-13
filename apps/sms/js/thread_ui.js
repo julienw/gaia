@@ -6,7 +6,7 @@
          ActivityPicker, ThreadListUI, OptionMenu, Threads, Contacts,
          Attachment, WaitingScreen, MozActivity, LinkActionHandler,
          ActivityHandler, TimeHeaders, ContactRenderer, Draft, Drafts,
-         Thread */
+         Thread, MultiSimActionButton */
 /*exported ThreadUI */
 
 (function(global) {
@@ -15,6 +15,9 @@
 var attachmentMap = new WeakMap();
 var isEmptyOnBackspace = false;
 var isHoldingBackspace = false;
+
+// Keep in sync with SimSettingsHelper.
+const ALWAYS_ASK_OPTION_VALUE = '-1';
 
 function thui_mmsAttachmentClick(target) {
   var attachment = attachmentMap.get(target);
@@ -77,6 +80,7 @@ var ThreadUI = global.ThreadUI = {
     update: null,
     subjectLengthNotice: null
   },
+  multiSimActionButton: null,
   init: function thui_init() {
     var templateIds = [
       'message',
@@ -164,6 +168,9 @@ var ThreadUI = global.ThreadUI = {
 
     this.sendButton.addEventListener(
       'click', this.onSendClick.bind(this)
+    );
+    this.sendButton.addEventListener(
+      'contextmenu', this.onSendClick.bind(this)
     );
 
     this.container.addEventListener(
@@ -284,6 +291,8 @@ var ThreadUI = global.ThreadUI = {
     // Initialized here, but used in ThreadUI.cleanFields
     this.previousHash = null;
 
+    this.multiSimActionButton = null;
+
     this.timeouts.update = null;
 
     // Cache fixed measurement while init
@@ -327,16 +336,15 @@ var ThreadUI = global.ThreadUI = {
    * visible.
    */
   onBeforeEnter: function thui_onBeforeEnter() {
-    if (Settings.hasSeveralSim()) {
-      navigator.mozL10n.localize(
-        this.dualSimInformation,
-        'sim-name',
-        { id: Settings.smsServiceId + 1 }
+    if (!this.multiSimActionButton) {
+      // handles the various actions on the send button and encapsulates the
+      // DSDS specific behavior
+      this.multiSimActionButton =
+        new MultiSimActionButton(
+          this.sendButton,
+          this.simSelectedCallback.bind(this),
+          Settings.SERVICE_ID_KEYS.smsServiceId
       );
-      this.composeForm.classList.add('dual-sim-configuration');
-    } else {
-      navigator.mozL10n.localize(this.dualSimInformation);
-      this.composeForm.classList.remove('dual-sim-configuration');
     }
   },
 
@@ -2111,16 +2119,21 @@ var ThreadUI = global.ThreadUI = {
       return;
     }
 
-    // Assimilation 3 (see "Assimilations" above)
-    // User may return to recipients, type a new recipient
-    // manually and then click the sendButton without "accepting"
-    // the recipient.
-    this.assimilateRecipients();
+    if (Settings.smsServiceId !== ALWAYS_ASK_OPTION_VALUE) {
+      // Assimilation 3 (see "Assimilations" above)
+      // User may return to recipients, type a new recipient
+      // manually and then click the sendButton without "accepting"
+      // the recipient.
+      this.assimilateRecipients();
 
-    // not sure why this happens - replace me if you know
-    this.container.classList.remove('hide');
+      // not sure why this happens - replace me if you know
+      this.container.classList.remove('hide');
+    }
+  },
 
-    this.sendMessage({ serviceId: Settings.smsServiceId });
+  // FIXME/drs: phoneNumber not needed.
+  simSelectedCallback: function thui_simSelected(phoneNumber, cardIndex) {
+    this.sendMessage({ serviceId: cardIndex });
   },
 
   sendMessage: function thui_sendMessage(opts) {
@@ -2151,6 +2164,7 @@ var ThreadUI = global.ThreadUI = {
     }.bind(this);
 
     if (messageType === 'sms' ||
+      !Settings.hasSeveralSim() ||
       serviceId === Settings.mmsServiceId) {
       next();
     } else {

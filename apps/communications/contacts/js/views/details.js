@@ -442,8 +442,9 @@ contacts.Details = (function() {
         } else if (navigator.mozTelephony) {
           LazyLoader.load(['/shared/js/multi_sim_action_button.js'],
                           function() {
-            new MultiSimActionButton(button, function() {return number},
-             TelephonyHelper.call);
+            new MultiSimActionButton(button, TelephonyHelper.call,
+                                     function() {return number},
+                                     'ril.telephony.defaultServiceId');
           });
         }
     });
