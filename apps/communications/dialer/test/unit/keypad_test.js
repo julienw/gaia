@@ -1,7 +1,7 @@
-/* globals CallButton, CallLogDBManager, gTonesFrequencies, KeypadManager,
-           MockCall, MockCallButton, MockCallsHandler, MockDialerIndexHtml,
+/* globals CallLogDBManager, gTonesFrequencies, KeypadManager,
+           MockCall, MockCallsHandler, MockDialerIndexHtml,
            MockMozTelephony, MockSettingsListener, MocksHelper, MockTonePlayer,
-           telephonyAddCall
+           telephonyAddCall, MockCallButtonSingleton
 */
 
 'use strict';
@@ -45,6 +45,7 @@ suite('dialer/keypad', function() {
     previousBody = document.body.innerHTML;
     document.body.innerHTML = MockDialerIndexHtml;
     subject = KeypadManager;
+    subject.init(false);
   });
 
   suiteTeardown(function() {
@@ -84,7 +85,7 @@ suite('dialer/keypad', function() {
     });
 
     test('Get IMEI via send MMI', function() {
-      var callSpy = this.sinon.spy(CallButton, 'makeCall');
+      var callSpy = this.sinon.spy(MockCallButtonSingleton, 'makeCall');
 
       var mmi = '*#06#';
       var fakeEvent = {
@@ -274,15 +275,16 @@ suite('dialer/keypad', function() {
 
   suite('Initializing CallButton', function() {
     test('Should initialize CallButton', function() {
-      var initSpy = this.sinon.spy(MockCallButton, 'init');
       subject.init(false);
-      sinon.assert.calledOnce(initSpy);
+      //sinon.assert.calledOnce(initSpy);
+      assert.isTrue(MockCallButtonSingleton.isInitialized);
     });
 
     test('Should pass a valid phone number getter', function() {
       subject.init(false);
       subject._phoneNumber = '1111111';
-      assert.equal(subject._phoneNumber, MockCallButton._phoneNumberGetter());
+      assert.equal(subject._phoneNumber,
+       MockCallButtonSingleton._phoneNumberGetter());
     });
   });
 });

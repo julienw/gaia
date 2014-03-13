@@ -5,6 +5,7 @@ requireApp('communications/contacts/test/unit/mock_details_dom.js.html');
 
 require('/shared/js/text_normalizer.js');
 require('/shared/test/unit/mocks/mock_contact_all_fields.js');
+require('/shared/test/unit/mocks/mock_lazy_loader.js');
 
 requireApp('communications/contacts/js/views/details.js');
 requireApp('communications/contacts/js/utilities/event_listeners.js');
@@ -15,6 +16,8 @@ requireApp('communications/contacts/test/unit/mock_contacts.js');
 requireApp('communications/contacts/test/unit/mock_contacts_list_obj.js');
 requireApp('communications/contacts/test/unit/mock_fb.js');
 requireApp('communications/contacts/test/unit/mock_extfb.js');
+requireApp('communications/contacts/test/unit/mock_activities.js');
+requireApp('communications/contacts/test/unit/mock_mmi_manager.js');
 
 require('/shared/test/unit/mocks/mock_contact_photo_helper.js');
 
@@ -23,6 +26,7 @@ var subject,
     realL10n,
     realOnLine,
     realMisc,
+    realActivityHandler,
     dom,
     contact,
     contactDetails,
@@ -52,8 +56,14 @@ var subject,
 
 var SCALE_RATIO = 1;
 
+if (!this.ActivityHandler) {
+  this.ActivityHandler = null;
+}
+
 var mocksHelperForDetailView = new MocksHelper([
-  'ContactPhotoHelper'
+  'ContactPhotoHelper',
+  'LazyLoader',
+  'MmiManager'
 ]).init();
 
 suite('Render contact', function() {
@@ -71,6 +81,7 @@ suite('Render contact', function() {
   suiteSetup(function() {
     realOnLine = Object.getOwnPropertyDescriptor(navigator, 'onLine');
     realL10n = navigator.mozL10n;
+    realActivityHandler = window.ActivityHandler;
     navigator.mozL10n = {
       get: function get(key) {
         return key;
@@ -79,6 +90,9 @@ suite('Render contact', function() {
         this.localeFormat = function(date, format) {
           return date;
         };
+      },
+      translate: function() {
+
       }
     };
 
@@ -90,6 +104,8 @@ suite('Render contact', function() {
         return normalizedDate.toString();
       }
     };
+
+    window.ActivityHandler = MockActivities;
 
     Object.defineProperty(navigator, 'onLine', {
       configurable: true,
@@ -143,6 +159,7 @@ suite('Render contact', function() {
       Object.defineProperty(navigator, 'onLine', realOnLine);
     }
     utils.misc = realMisc;
+    window.ActivityHandler = realActivityHandler;
   });
 
   setup(function() {

@@ -61,6 +61,10 @@
     <link href="/shared/js/fb/fb_data_reader.js">
     <link href="/shared/js/setImmediate.js">
     <link href="/shared/js/sim_settings_helper.js">
+    <link href="/shared/js/sim_picker.js">
+    <link href="/shared/js/lazy_l10n.js">
+    <link rel="stylesheet" type="text/css" href="/shared/style/action_menu.css">
+    <link rel="stylesheet" type="text/css" href="/dialer/style/sim.css">
     -->
 
     <link rel="import" href="elements/confirm.html">
@@ -72,6 +76,7 @@
     <link rel="import" href="elements/settings.html">
     <link rel="import" href="elements/status.html">
     <link rel="import" href="elements/tag.html">
+    <link rel="import" href="/dialer/elements/sim-picker.html">
   </head>
 
   <body role="application" class="app-contacts">
@@ -181,6 +186,8 @@
     <article is="settings" id="settings-wrapper"></article>
     <form    is="confirm-form" data-type="confirm" id="loading-overlay" class="hide no-opacity" role="dialog"></form>
     <section is="status-message" id="statusMsg" role="status" class="hidden"></section>
-    <form    is="confirmation-message" id="confirmation-message" class="hide" role="dialog" data-type="confirm"></form>
+    <form    is="confirmation-message" id="confirmation-message" class="hide" role="dialog" data-type="confirm">
+    </form>
+    <form is="sim-picker" id="sim-picker" role="dialog" data-type="action" hidden></form>
   </body>
 </html>
