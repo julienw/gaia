@@ -2133,6 +2133,11 @@ var ThreadUI = global.ThreadUI = {
 
   // FIXME/drs: phoneNumber not needed.
   simSelectedCallback: function thui_simSelected(phoneNumber, cardIndex) {
+    cardIndex = +cardIndex;
+    if (isNaN(cardIndex)) {
+      cardIndex = 0;
+    }
+
     this.sendMessage({ serviceId: cardIndex });
   },
 

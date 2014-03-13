@@ -3893,7 +3893,8 @@ suite('thread_ui.js >', function() {
 
     function clickButtonAndSelectSim(serviceId) {
       ThreadUI.onSendClick();
-      ThreadUI.simSelectedCallback(undefined, serviceId);
+      // we get a string from the MultiSimActionButton
+      ThreadUI.simSelectedCallback(undefined, '' + serviceId);
     }
 
     setup(function() {
