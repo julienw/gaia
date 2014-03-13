@@ -16,7 +16,7 @@ var MultiSimActionButton = function MultiSimActionButton(
   this._button.addEventListener('click', this._click.bind(this));
 
   if (window.navigator.mozIccManager &&
-      window.navigator.mozIccManager.iccIds.length > 1) {
+      window.navigator.mozIccManager.iccIds.length >= 0) {
     this._button.addEventListener('contextmenu', this._contextmenu.bind(this));
 
     var self = this;
@@ -46,7 +46,7 @@ MultiSimActionButton.prototype._click = function cb_click(event) {
     event.preventDefault();
   }
 
-  var phoneNumber = this._phoneNumberGetter();
+  var phoneNumber = this._phoneNumberGetter && this._phoneNumberGetter();
   if (!window.navigator.mozIccManager || phoneNumber === '') {
     return;
   }
@@ -73,7 +73,7 @@ MultiSimActionButton.prototype._click = function cb_click(event) {
 MultiSimActionButton.prototype._updateUI = function cb_updateUI(cardIndex) {
   if (cardIndex >= 0 &&
       window.navigator.mozIccManager &&
-      window.navigator.mozIccManager.iccIds.length > 1) {
+      window.navigator.mozIccManager.iccIds.length >= 0) {
     if (this._simIndication) {
       var self = this;
       navigator.mozL10n.ready(function() {
@@ -92,10 +92,11 @@ MultiSimActionButton.prototype._contextmenu = function cb_contextmenu(event) {
   // Don't do anything, including preventDefaulting the event, if the phone
   // number is blank. We don't want to preventDefault because we want the
   // contextmenu event to generate a click.
-  var phoneNumber = this._phoneNumberGetter();
+  var phoneNumber = this._phoneNumberGetter && this._phoneNumberGetter();
   if (!window.navigator.mozIccManager ||
-      window.navigator.mozIccManager.iccIds.length === 1 ||
-      phoneNumber === '') {
+      window.navigator.mozIccManager.iccIds.length === 0 ||
+      phoneNumber === '' ||
+      event.target.disabled) {
     return;
   }
 
@@ -113,7 +114,7 @@ MultiSimActionButton.prototype._contextmenu = function cb_contextmenu(event) {
 
 MultiSimActionButton.prototype.performAction =
   function cb_performAction(cardIndex) {
-  var phoneNumber = this._phoneNumberGetter();
+  var phoneNumber = this._phoneNumberGetter && this._phoneNumberGetter();
   if (phoneNumber === '') {
     return;
   }

@@ -1,4 +1,3 @@
-/* global LazyL10n */
 /* exported SimPicker */
 
 'use strict';
@@ -18,10 +17,15 @@
 
       this._buildDom();
       var self = this;
-      LazyL10n.get(function() {
+      navigator.mozL10n.ready(function() {
         var dialViaElt = document.getElementById('sim-picker-dial-via');
-        navigator.mozL10n.localize(
-          dialViaElt, 'sim-picker-dial-via', {phoneNumber: phoneNumber});
+        if (phoneNumber) {
+          navigator.mozL10n.localize(
+            dialViaElt, 'sim-picker-dial-via-with-number',
+            {phoneNumber: phoneNumber});
+        } else {
+          navigator.mozL10n.translate(dialViaElt);
+        }
 
         var simButtons = self._simPickerElt.querySelectorAll(
           'button[data-card-index]');
@@ -35,6 +39,7 @@
         }
 
         self._simPickerElt.hidden = false;
+        self._simPickerElt.focus();
       });
     },
 
@@ -45,7 +50,7 @@
 
       this._domBuilt = true;
       var self = this;
-      LazyL10n.get(function() {
+      navigator.mozL10n.ready(function() {
         var templateNode = document.getElementById(
           'sim-picker-button-template');
 

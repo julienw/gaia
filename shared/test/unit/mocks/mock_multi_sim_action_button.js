@@ -7,9 +7,6 @@ var MockMultiSimActionButtonSingleton = {
   performAction: function() {
 
   },
-  getCardIndex: function() {
-
-  },
   _phoneNumberGetter: null
 };
 
