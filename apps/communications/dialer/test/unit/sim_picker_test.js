@@ -63,8 +63,9 @@ suite('SIM picker', function() {
       var localizeSpy = this.sinon.spy(MockMozL10n, 'localize');
       subject.show(0, '1111', function() {});
       sinon.assert.calledWith(localizeSpy,
-                              document.getElementById('sim-picker-dial-via'),
-                              'sim-picker-dial-via',
+                              document.getElementById(
+                                'sim-picker-dial-via-with-number'),
+                              'sim-picker-dial-via-with-number',
                               {phoneNumber: '1111'});
     });
 
@@ -73,15 +74,17 @@ suite('SIM picker', function() {
 
       subject.show(0, '1111', function() {});
       sinon.assert.calledWith(localizeSpy,
-                              document.getElementById('sim-picker-dial-via'),
-                              'sim-picker-dial-via',
+                              document.getElementById(
+                                'sim-picker-dial-via-with-number'),
+                              'sim-picker-dial-via-with-number',
                               {phoneNumber: '1111'});
       assert.equal(menu.children.length, 3);
 
       subject.show(0, '2222', function() {});
       sinon.assert.calledWith(localizeSpy,
-                              document.getElementById('sim-picker-dial-via'),
-                              'sim-picker-dial-via',
+                              document.getElementById(
+                                'sim-picker-dial-via-with-number'),
+                              'sim-picker-dial-via-with-number',
                               {phoneNumber: '2222'});
       assert.equal(menu.children.length, 3);
     });

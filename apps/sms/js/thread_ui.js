@@ -16,6 +16,9 @@ var attachmentMap = new WeakMap();
 var isEmptyOnBackspace = false;
 var isHoldingBackspace = false;
 
+// Keep in sync with SimSettingsHelper.
+const ALWAYS_ASK_OPTION_VALUE = '-1';
+
 function thui_mmsAttachmentClick(target) {
   var attachment = attachmentMap.get(target);
   if (!attachment) {
@@ -77,6 +80,7 @@ var ThreadUI = global.ThreadUI = {
     update: null,
     subjectLengthNotice: null
   },
+  multiSimActionButton: null,
   init: function thui_init() {
     var templateIds = [
       'message',
@@ -162,8 +166,16 @@ var ThreadUI = global.ThreadUI = {
       }
     );
 
+    this.multiSimActionButton =
+      new MultiSimActionButton(this.sendButton,
+                               null,
+                               this.simSelectedCallback.bind(this),
+                               'ril.sms.defaultServiceId');
     this.sendButton.addEventListener(
       'click', this.onSendClick.bind(this)
+    );
+    this.sendButton.addEventListener(
+      'contextmenu', this.onSendClick.bind(this)
     );
 
     this.container.addEventListener(
@@ -2111,16 +2123,21 @@ var ThreadUI = global.ThreadUI = {
       return;
     }
 
-    // Assimilation 3 (see "Assimilations" above)
-    // User may return to recipients, type a new recipient
-    // manually and then click the sendButton without "accepting"
-    // the recipient.
-    this.assimilateRecipients();
+    if (Settings.smsServiceId !== ALWAYS_ASK_OPTION_VALUE) {
+      // Assimilation 3 (see "Assimilations" above)
+      // User may return to recipients, type a new recipient
+      // manually and then click the sendButton without "accepting"
+      // the recipient.
+      this.assimilateRecipients();
 
-    // not sure why this happens - replace me if you know
-    this.container.classList.remove('hide');
+      // not sure why this happens - replace me if you know
+      this.container.classList.remove('hide');
+    }
+  },
 
-    this.sendMessage({ serviceId: Settings.smsServiceId });
+  // FIXME/drs: phoneNumber not needed.
+  simSelectedCallback: function thui_simSelectedCallback(phoneNumber, cardIndex) {
+    this.sendMessage({ serviceId: cardIndex });
   },
 
   sendMessage: function thui_sendMessage(opts) {

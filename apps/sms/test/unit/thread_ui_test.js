@@ -56,6 +56,7 @@ requireApp('sms/test/unit/mock_information.js');
 require('/test/unit/mock_contact_renderer.js');
 require('/shared/test/unit/mocks/mock_contact_photo_helper.js');
 require('/test/unit/mock_message_manager.js');
+require('/shared/test/unit/mocks/mock_multi_sim_action_button.js');
 
 var mocksHelperForThreadUI = new MocksHelper([
   'Attachment',
@@ -78,7 +79,8 @@ var mocksHelperForThreadUI = new MocksHelper([
   'ContactRenderer',
   'Information',
   'ContactPhotoHelper',
-  'MessageManager'
+  'MessageManager',
+  'MultiSimActionButton'
 ]);
 
 mocksHelperForThreadUI.init();
@@ -4036,7 +4038,7 @@ suite('thread_ui.js >', function() {
       });
 
       test('initializes MultiSimActionButton', function() {
-        assert.isTrue(MockMultiSimActionButton.isInitialized);
+        assert.isTrue(MockMultiSimActionButtonSingleton.isInitialized);
       });
 
       test('MMS, SMS serviceId is the same than the MMS serviceId, sends asap',
