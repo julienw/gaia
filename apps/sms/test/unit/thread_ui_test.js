@@ -3872,6 +3872,12 @@ suite('thread_ui.js >', function() {
         ThreadUI.sendButton.disabled = false;
       });
 
+      ThreadUI._onSendClick = ThreadUI.onSendClick;
+      this.sinon.stub(ThreadUI, 'onSendClick', function() {
+        ThreadUI._onSendClick();
+        ThreadUI.simSelectedCallback(Settings.smsServiceId);
+      });
+
       this.sinon.stub(Compose, 'isEmpty').returns(false);
     });
 
