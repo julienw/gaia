@@ -291,6 +291,8 @@ var ThreadUI = global.ThreadUI = {
     // Initialized here, but used in ThreadUI.cleanFields
     this.previousHash = null;
 
+    this.multiSimActionButton = null;
+
     this.timeouts.update = null;
 
     // Cache fixed measurement while init

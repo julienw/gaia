@@ -6,7 +6,7 @@
          MockContacts, ActivityHandler, Recipients, MockMozActivity,
          ThreadListUI, ContactRenderer, UIEvent, Drafts, OptionMenu,
          ActivityPicker, KeyEvent, MockNavigatorSettings, Draft,
-         ErrorDialog
+         ErrorDialog, MultiSimActionButton
 */
 
 'use strict';
@@ -4047,10 +4047,6 @@ suite('thread_ui.js >', function() {
         Settings.isDualSimDevice.returns(true);
       });
 
-      test('initializes MultiSimActionButton', function() {
-        assert.isTrue(MockMultiSimActionButtonSingleton.isInitialized);
-      });
-
       test('MMS, SMS serviceId is the same than the MMS serviceId, sends asap',
       function() {
         Settings.mmsServiceId = 1;
@@ -5100,82 +5096,23 @@ suite('thread_ui.js >', function() {
   });
 
   suite('onBeforeEnter()', function() {
-    suite('sets up the composer', function() {
-      setup(function() {
-        this.sinon.spy(MockL10n, 'localize');
-      });
+    setup(function() {
+      this.sinon.spy(window, 'MultiSimActionButton');
+      ThreadUI.onBeforeEnter();
+    });
 
-      test('Device with one SIMslot', function() {
-        this.sinon.stub(Settings, 'isDualSimDevice').returns(false);
-        this.sinon.stub(Settings, 'hasSeveralSim').returns(false);
+    test('initializes MultiSimActionButton', function() {
+      sinon.assert.calledWith(
+        MultiSimActionButton,
+        sendButton,
+        sinon.match.func,
+        Settings.SERVICE_ID_KEYS.smsServiceId
+      );
+    });
 
-        ThreadUI.onBeforeEnter();
-
-        sinon.assert.calledWithExactly(
-          MockL10n.localize,
-          sendButtonSimInfo
-        );
-
-        assert.isFalse(
-          composeForm.classList.contains('dual-sim-configuration')
-        );
-      });
-
-      test('Device with two SIMslots but one SIM', function() {
-        this.sinon.stub(Settings, 'isDualSimDevice').returns(true);
-        this.sinon.stub(Settings, 'hasSeveralSim').returns(false);
-
-        ThreadUI.onBeforeEnter();
-
-        sinon.assert.calledWithExactly(
-          MockL10n.localize,
-          sendButtonSimInfo
-        );
-
-        assert.isFalse(
-          composeForm.classList.contains('dual-sim-configuration')
-        );
-      });
-
-      suite('Device with two SIMslots and two SIMs', function() {
-        setup(function() {
-          this.sinon.stub(Settings, 'isDualSimDevice').returns(true);
-          this.sinon.stub(Settings, 'hasSeveralSim').returns(true);
-        });
-
-        test('smsServiceId and mmsServiceId have the same value', function() {
-          Settings.smsServiceId = Settings.mmsServiceId = 0;
-          ThreadUI.onBeforeEnter();
-
-          sinon.assert.calledWithExactly(
-            MockL10n.localize,
-            sendButtonSimInfo,
-            'sim-name',
-            { id: 1 }
-          );
-
-          assert.isTrue(
-            composeForm.classList.contains('dual-sim-configuration')
-          );
-        });
-
-        test('smsServiceId and mmsServiceId have different values', function() {
-          Settings.smsServiceId = 1;
-          Settings.mmsServiceId = 0;
-          ThreadUI.onBeforeEnter();
-
-          sinon.assert.calledWithExactly(
-            MockL10n.localize,
-            sendButtonSimInfo,
-            'sim-name',
-            { id: 2 }
-          );
-
-          assert.isTrue(
-            composeForm.classList.contains('dual-sim-configuration')
-          );
-        });
-      });
+    test('initializes only once', function() {
+      ThreadUI.onBeforeEnter();
+      sinon.assert.calledOnce(MultiSimActionButton);
     });
   });
 });
