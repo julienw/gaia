@@ -444,31 +444,6 @@ var Contacts = (function() {
       SmsIntegration.sendSms(number);
   };
 
-  var callOrPick = function callOrPick(number) {
-    LazyLoader.load(['/dialer/js/mmi.js',
-                     '/shared/js/sim_settings_helper.js'],
-                    function mmiLoaded() {
-      if (ActivityHandler.currentlyHandling &&
-          ActivityHandler.activityName !== 'open') {
-        ActivityHandler.postPickSuccess({ number: number });
-      } else if (MmiManager.isMMI(number)) {
-        // For security reasons we cannot directly call MmiManager.send(). We
-        // need to show the MMI number in the dialer instead.
-        new MozActivity({
-          name: 'dial',
-          data: {
-            type: 'webtelephony/number',
-            number: number
-          }
-        });
-      } else if (navigator.mozTelephony) {
-        SimSettingsHelper.getCardIndexFrom('outgoingCall', function(cardIndex) {
-          TelephonyHelper.call(number, cardIndex);
-        });
-      }
-    });
-  };
-
   var handleBack = function handleBack() {
     navigation.back();
   };
@@ -933,7 +908,6 @@ var Contacts = (function() {
     'cancel': handleCancel,
     'goToSelectTag': goToSelectTag,
     'sendSms': sendSms,
-    'callOrPick': callOrPick,
     'navigation': navigation,
     'sendEmailOrPick': sendEmailOrPick,
     'updatePhoto': updatePhoto,

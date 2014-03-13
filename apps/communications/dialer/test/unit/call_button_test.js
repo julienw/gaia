@@ -35,7 +35,7 @@ suite('call button', function() {
   var initSubject = function() {
     MockNavigatorSettings.createLock().set({
       'ril.telephony.defaultServiceId': cardIndex });
-    subject.init(button, phoneNumberGetter, function() {},
+    subject = new CallButton(button, phoneNumberGetter, function() {},
                  'ril.telephony.defaultServiceId');
     // MockSettingsListener doesn't simulate the regular behavior of triggering
     // the callback as soon as the pref is loaded, so we have to simulate it
@@ -133,7 +133,7 @@ suite('call button', function() {
 
       test('should fire SIM selected callback', function() {
         var showSpy = this.sinon.spy(MockSimPicker, 'show');
-        subject.init(button, phoneNumberGetter, function() {},
+        subject = new CallButton(button, phoneNumberGetter, function() {},
                      'ril.telephony.defaultServiceId');
         MockSettingsListener.mTriggerCallback(
           'ril.telephony.defaultServiceId', cardIndex);
@@ -147,7 +147,7 @@ suite('call button', function() {
 
       test('should check the connection on the primary SIM card', function() {
         var callStub = this.sinon.stub();
-        subject.init(button, phoneNumberGetter, callStub,
+        subject = new CallButton(button, phoneNumberGetter, callStub,
                      'ril.telephony.defaultServiceId');
         MockSettingsListener.mTriggerCallback(
           'ril.telephony.defaultServiceId', cardIndex);
