@@ -3863,6 +3863,15 @@ suite('thread_ui.js >', function() {
   suite('Sending Behavior (onSendClick)', function() {
     var spy;
 
+    function clickButton() {
+      clickButtonAndSelectSim(0);
+    }
+
+    function clickButtonAndSelectSim(serviceId) {
+      ThreadUI.onSendClick();
+      ThreadUI.simSelectedCallback(undefined, serviceId);
+    }
+
     setup(function() {
       window.location.hash = '#new';
       this.sinon.stub(MessageManager, 'sendSMS');
@@ -3872,13 +3881,9 @@ suite('thread_ui.js >', function() {
         ThreadUI.sendButton.disabled = false;
       });
 
-      ThreadUI._onSendClick = ThreadUI.onSendClick;
-      this.sinon.stub(ThreadUI, 'onSendClick', function() {
-        ThreadUI._onSendClick();
-        ThreadUI.simSelectedCallback(Settings.smsServiceId);
-      });
-
       this.sinon.stub(Compose, 'isEmpty').returns(false);
+      this.sinon.stub(Settings, 'hasSeveralSim').returns(false);
+      this.sinon.stub(Settings, 'isDualSimDevice').returns(false);
     });
 
     test('SMS, 1 Recipient, moves to thread', function() {
@@ -3891,12 +3896,12 @@ suite('thread_ui.js >', function() {
 
       Compose.append(body);
 
-      ThreadUI.onSendClick();
+      clickButton();
 
       sinon.assert.calledWithMatch(MessageManager.sendSMS, {
         recipients: [recipient],
         content: body,
-        serviceId: null
+        serviceId: 0
       });
 
       var sentMessage = MockMessages.sms({
@@ -3917,11 +3922,11 @@ suite('thread_ui.js >', function() {
 
       Compose.append(mockAttachment(512));
 
-      ThreadUI.onSendClick();
+      clickButton();
 
       sinon.assert.calledWithMatch(MessageManager.sendMMS, {
         recipients: [recipient],
-        serviceId: null
+        serviceId: 0
       });
 
       var sentMessage = MockMessages.mms({
@@ -3945,13 +3950,13 @@ suite('thread_ui.js >', function() {
 
         Compose.append(body);
 
-        ThreadUI.onSendClick();
+        clickButton();
 
         sinon.assert.calledWithMatch(
           MessageManager.sendSMS, {
           recipients: recipients,
           content: body,
-          serviceId: null
+          serviceId: 0
         });
 
         recipients.forEach(function(recipient) {
@@ -3995,12 +4000,12 @@ suite('thread_ui.js >', function() {
 
       Compose.append(mockAttachment(512));
 
-      ThreadUI.onSendClick();
+      clickButton();
 
       assert.equal(window.location.hash, '#new');
       sinon.assert.calledWithMatch(MessageManager.sendMMS, {
         recipients: recipients,
-        serviceId: null
+        serviceId: 0
       });
 
       var sentMessage = MockMessages.mms({
@@ -4014,9 +4019,8 @@ suite('thread_ui.js >', function() {
 
     suite('DSDS behavior', function() {
       setup(function() {
-        this.sinon.stub(Settings, 'hasSeveralSim');
-        this.sinon.stub(Settings, 'isDualSimDevice').returns(true);
-
+        Settings.hasSeveralSim.returns(true);
+        Settings.isDualSimDevice.returns(true);
       });
 
       test('initializes MultiSimActionButton', function() {
@@ -4025,7 +4029,8 @@ suite('thread_ui.js >', function() {
 
       test('MMS, SMS serviceId is the same than the MMS serviceId, sends asap',
       function() {
-        Settings.smsServiceId = Settings.mmsServiceId = 1;
+        Settings.mmsServiceId = 1;
+        var targetServiceId = 1;
 
         var recipient = '999';
 
@@ -4035,7 +4040,7 @@ suite('thread_ui.js >', function() {
 
         Compose.append(mockAttachment(512));
 
-        ThreadUI.onSendClick();
+        clickButtonAndSelectSim(targetServiceId);
 
         sinon.assert.calledWithMatch(MessageManager.sendMMS, {
           recipients: [recipient],
@@ -4045,8 +4050,8 @@ suite('thread_ui.js >', function() {
 
       test('SMS, SMS serviceId is different than MMS serviceId, sends asap',
       function() {
-        Settings.smsServiceId = 0;
         Settings.mmsServiceId = 1;
+        var targetServiceId = 0;
 
         var recipient = '999';
         var body = 'some useless text';
@@ -4057,7 +4062,7 @@ suite('thread_ui.js >', function() {
 
         Compose.append(body);
 
-        ThreadUI.onSendClick();
+        clickButtonAndSelectSim(targetServiceId);
 
         sinon.assert.calledWithMatch(MessageManager.sendSMS, {
           recipients: [recipient],
@@ -4067,13 +4072,13 @@ suite('thread_ui.js >', function() {
       });
 
       suite('MMS, SMS serviceId is different than MMS serviceId,', function() {
-        var recipient;
+        var recipient, targetServiceId;
 
         setup(function() {
           this.sinon.spy(window, 'ErrorDialog');
 
-          Settings.smsServiceId = 0;
           Settings.mmsServiceId = 1;
+          targetServiceId = 0;
 
           recipient = '999';
 
@@ -4083,7 +4088,7 @@ suite('thread_ui.js >', function() {
 
           Compose.append(mockAttachment(512));
 
-          ThreadUI.onSendClick();
+          clickButtonAndSelectSim(targetServiceId);
         });
 
         test('asks user', function() {
@@ -4097,7 +4102,7 @@ suite('thread_ui.js >', function() {
 
           sinon.assert.calledWithMatch(MessageManager.sendMMS, {
             recipients: [recipient],
-            serviceId: Settings.smsServiceId
+            serviceId: targetServiceId
           });
         });
       });
@@ -4114,7 +4119,7 @@ suite('thread_ui.js >', function() {
       });
       Compose.append('foo');
 
-      ThreadUI.onSendClick();
+      clickButton();
 
       sinon.assert.calledOnce(Drafts.delete);
       sinon.assert.calledOnce(Drafts.store);
@@ -4132,7 +4137,7 @@ suite('thread_ui.js >', function() {
       });
       Compose.append('foo');
 
-      ThreadUI.onSendClick();
+      clickButton();
 
       assert.isTrue(spy.calledOnce);
     });
@@ -4147,7 +4152,7 @@ suite('thread_ui.js >', function() {
 
         Compose.append(mockAttachment(512));
 
-        sendButton.click();
+        clickButton();
       });
 
       test('NotFoundError', function() {
