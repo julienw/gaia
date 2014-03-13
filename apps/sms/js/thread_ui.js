@@ -2162,6 +2162,7 @@ var ThreadUI = global.ThreadUI = {
     }.bind(this);
 
     if (messageType === 'sms' ||
+      !Settings.hasSeveralSim() ||
       serviceId === Settings.mmsServiceId) {
       next();
     } else {
