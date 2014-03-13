@@ -1,8 +1,7 @@
-/* globals CallButton, CallHandler, CallLogDBManager, gTonesFrequencies,
-           KeypadManager, MockCall, MockCallButton, MockCallsHandler,
-           MockDialerIndexHtml, MockIccManager, MockMozTelephony,
-           MockNavigatorSettings, MockSettingsListener, MocksHelper,
-           MockTonePlayer, SimPicker, telephonyAddCall
+/* globals CallLogDBManager, gTonesFrequencies, KeypadManager, MockCall,
+           MockMultiSimActionButton, MockCallsHandler, MockDialerIndexHtml,
+           MockMozTelephony, MockSettingsListener, MocksHelper, MockTonePlayer,
+           MultiSimActionButton, telephonyAddCall
 */
 
 'use strict';
@@ -13,7 +12,6 @@ require('/dialer/test/unit/mock_lazy_loader.js');
 require('/dialer/test/unit/mock_l10n.js');
 require('/dialer/test/unit/mock_utils.js');
 require('/dialer/test/unit/mock_call.js');
-require('/dialer/test/unit/mock_call_button.js');
 require('/dialer/test/unit/mock_call_handler.js');
 require('/dialer/test/unit/mock_call_log_db_manager.js');
 require('/dialer/test/unit/mock_calls_handler.js');
@@ -24,6 +22,7 @@ require('/shared/test/unit/mocks/mock_iccmanager.js');
 require('/shared/test/unit/mocks/mock_navigator_moz_settings.js');
 require('/shared/test/unit/mocks/mock_settings_listener.js');
 require('/shared/test/unit/mocks/mock_sim_picker.js');
+require('/shared/test/unit/mocks/mock_multi_sim_action_button.js');
 
 require('/dialer/test/unit/mock_dialer_index.html.js');
 
@@ -31,7 +30,7 @@ var mocksHelperForKeypad = new MocksHelper([
   'LazyL10n',
   'LazyLoader',
   'Utils',
-  'CallButton',
+  'MultiSimActionButton',
   'CallsHandler',
   'CallHandler',
   'CallLogDBManager',
@@ -105,7 +104,8 @@ suite('dialer/keypad', function() {
     });
 
     test('Get IMEI via send MMI', function() {
-      var callSpy = this.sinon.spy(MockCallButtonSingleton, 'makeCall');
+      var callSpy =
+        this.sinon.spy(MockMultiSimActionButtonSingleton, 'performAction');
 
       var mmi = '*#06#';
       var fakeEvent = {
@@ -355,18 +355,18 @@ suite('dialer/keypad', function() {
     });
   });
 
-  suite('Initializing CallButton', function() {
-    test('Should initialize CallButton', function() {
+  suite('Initializing MultiSimActionButton', function() {
+    test('Should initialize MultiSimActionButton', function() {
       subject.init(false);
       //sinon.assert.calledOnce(initSpy);
-      assert.isTrue(MockCallButtonSingleton.isInitialized);
+      assert.isTrue(MockMultiSimActionButtonSingleton.isInitialized);
     });
 
     test('Should pass a valid phone number getter', function() {
       subject.init(false);
       subject._phoneNumber = '1111111';
       assert.equal(subject._phoneNumber,
-       MockCallButtonSingleton._phoneNumberGetter());
+       MockMultiSimActionButtonSingleton._phoneNumberGetter());
     });
   });
 });

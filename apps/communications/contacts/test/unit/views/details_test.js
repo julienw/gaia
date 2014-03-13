@@ -7,7 +7,7 @@ require('/shared/js/text_normalizer.js');
 require('/shared/test/unit/mocks/mock_contact_all_fields.js');
 require('/shared/test/unit/mocks/mock_lazy_loader.js');
 require('/dialer/test/unit/mock_mmi_manager.js');
-require('/dialer/test/unit/mock_call_button.js');
+require('/dialer/test/unit/mock_multi_sim_action_button.js');
 require('/dialer/test/unit/mock_telephony_helper.js');
 
 requireApp('communications/contacts/js/views/details.js');
@@ -66,7 +66,7 @@ var mocksHelperForDetailView = new MocksHelper([
   'ContactPhotoHelper',
   'LazyLoader',
   'MmiManager',
-  'CallButton',
+  'MultiSimActionButton',
   'TelephonyHelper'
 ]).init();
 
@@ -711,25 +711,27 @@ suite('Render contact', function() {
       LazyLoader.load.restore();
     });
 
-    test(' > Not loading CallButton when we are on an activity', function() {
+    test(' > Not loading MultiSimActionButton when we are on an activity',
+         function() {
       MockActivities.currentlyHandling = true;
       subject.render(null, TAG_OPTIONS);
 
       assert.isFalse(MmiManager.isMMI.called);
-      assert.isTrue(
-        LazyLoader.load.neverCalledWith(['/dialer/js/call_button.js']));
+      assert.isTrue(LazyLoader.load.neverCalledWith(
+        ['/shared/js/multi_sim_action_button.js']));
       MockActivities.currentlyHandling = false;
     });
 
-    test('> Not loading CallButton if we have a MMI code', function() {
+    test('> Not loading MultiSimActionButton if we have a MMI code',
+         function() {
       MmiManager.isMMI.restore();
       sinon.stub(MmiManager, 'isMMI').returns(true);
 
       subject.render(null, TAG_OPTIONS);
 
       assert.isTrue(MmiManager.isMMI.called);
-      assert.isTrue(
-        LazyLoader.load.neverCalledWith(['/dialer/js/call_button.js']));
+      assert.isTrue(LazyLoader.load.neverCalledWith(
+        ['/shared/js/multi_sim_action_button.js']));
     });
 
     test('> Load call button', function() {
@@ -738,7 +740,8 @@ suite('Render contact', function() {
       // We have two buttons, 2 calls per button created
       assert.equal(LazyLoader.load.callCount, 4);
       var spyCall = LazyLoader.load.getCall(1);
-      assert.deepEqual(['/dialer/js/call_button.js'], spyCall.args[0]);
+      assert.deepEqual(
+        ['/shared/js/multi_sim_action_button.js'], spyCall.args[0]);
     });
   });
 

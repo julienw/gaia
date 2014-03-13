@@ -440,9 +440,10 @@ contacts.Details = (function() {
           ActivityHandler.activityName !== 'open' || MmiManager.isMMI(number)) {
           button.addEventListener('click', onPhoneExtraClicked);
         } else if (navigator.mozTelephony) {
-          LazyLoader.load(['/dialer/js/call_button.js'], function() {
-            new CallButton(button, function() {return number},
-              TelephonyHelper.call);
+          LazyLoader.load(['/shared/js/multi_sim_action_button.js'],
+                          function() {
+            new MultiSimActionButton(button, function() {return number},
+             TelephonyHelper.call);
           });
         }
     });
