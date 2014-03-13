@@ -6,7 +6,7 @@
          ActivityPicker, ThreadListUI, OptionMenu, Threads, Contacts,
          Attachment, WaitingScreen, MozActivity, LinkActionHandler,
          ActivityHandler, TimeHeaders, ContactRenderer, Draft, Drafts,
-         Thread */
+         Thread, MultiSimActionButton */
 /*exported ThreadUI */
 
 (function(global) {
@@ -166,10 +166,6 @@ var ThreadUI = global.ThreadUI = {
       }
     );
 
-    this.multiSimActionButton =
-      new MultiSimActionButton(this.sendButton,
-                               this.simSelectedCallback.bind(this),
-                               'ril.sms.defaultServiceId');
     this.sendButton.addEventListener(
       'click', this.onSendClick.bind(this)
     );
@@ -338,16 +334,15 @@ var ThreadUI = global.ThreadUI = {
    * visible.
    */
   onBeforeEnter: function thui_onBeforeEnter() {
-    if (Settings.hasSeveralSim()) {
-      navigator.mozL10n.localize(
-        this.dualSimInformation,
-        'sim-name',
-        { id: Settings.smsServiceId + 1 }
+    if (!this.multiSimActionButton) {
+      // handles the various actions on the send button and encapsulates the
+      // DSDS specific behavior
+      this.multiSimActionButton =
+        new MultiSimActionButton(
+          this.sendButton,
+          this.simSelectedCallback.bind(this),
+          Settings.SERVICE_ID_KEYS.smsServiceId
       );
-      this.composeForm.classList.add('dual-sim-configuration');
-    } else {
-      navigator.mozL10n.localize(this.dualSimInformation);
-      this.composeForm.classList.remove('dual-sim-configuration');
     }
   },
 
@@ -2135,7 +2130,7 @@ var ThreadUI = global.ThreadUI = {
   },
 
   // FIXME/drs: phoneNumber not needed.
-  simSelectedCallback: function thui_simSelectedCallback(phoneNumber, cardIndex) {
+  simSelectedCallback: function thui_simSelected(phoneNumber, cardIndex) {
     this.sendMessage({ serviceId: cardIndex });
   },
 
