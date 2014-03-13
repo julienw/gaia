@@ -759,7 +759,7 @@ form.bottom[role="search"].messages-compose-form {
   line-height: 2rem;
 }
 
-#messages-dual-sim-information {
+.js-sim-indication {
   position: absolute;
   left: 0;
   top: 0.2rem;
@@ -772,15 +772,16 @@ form.bottom[role="search"].messages-compose-form {
   opacity: 0.5;
 }
 
-.dual-sim-configuration #messages-dual-sim-information {
+.has-preferred-sim .js-sim-indication {
   display: block;
 }
 
-#messages-compose-form.dual-sim-configuration {
+/* this rule will be removed after a rebase */
+.has-preferred-sim #messages-compose-form {
   padding-top: 1.1rem;
 }
 
-.dual-sim-configuration #messages-send-button {
+.has-preferred-sim #messages-send-button {
   height: 4.5rem;
   padding-top: 0.5rem;
 
@@ -788,7 +789,7 @@ form.bottom[role="search"].messages-compose-form {
   background-position: left bottom, bottom;
 }
 
-.dual-sim-configuration #messages-send-button:after {
+.has-preferred-sim #messages-send-button:after {
   position: absolute;
   bottom: 0;
   left: 0;
