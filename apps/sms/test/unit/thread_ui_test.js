@@ -4011,6 +4011,10 @@ suite('thread_ui.js >', function() {
 
       });
 
+      test('initializes MultiSimActionButton', function() {
+        assert.isTrue(MockMultiSimActionButton.isInitialized);
+      });
+
       test('MMS, SMS serviceId is the same than the MMS serviceId, sends asap',
       function() {
         Settings.smsServiceId = Settings.mmsServiceId = 1;

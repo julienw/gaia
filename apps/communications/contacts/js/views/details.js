@@ -434,7 +434,7 @@ contacts.Details = (function() {
     var simPickerNode = document.getElementById('sim-picker');
     LazyLoader.load(['/dialer/js/mmi.js',
       '/shared/js/lazy_l10n.js',
-      '/dialer/js/call_button.js',
+      '/shared/js/multi_sim_action_button.js',
       '/shared/style/action_menu.css',
       '/dialer/style/sim.css',
       simPickerNode], function() {
@@ -443,7 +443,7 @@ contacts.Details = (function() {
           ActivityHandler.activityName !== 'open' || MmiManager.isMMI(number)) {
           button.addEventListener('click', onPhoneExtraClicked);
         } else if (navigator.mozTelephony) {
-          new CallButton(button, function() {return number},
+          new MultiSimActionButton(button, function() {return number},
            TelephonyHelper.call);
         }
     });
