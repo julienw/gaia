@@ -9,16 +9,26 @@
 'use strict';
 
 var ActivityHandler = {
+  // CSS class applied to the body element when app requested via activity
+  REQUEST_ACTIVITY_MODE_CLASS_NAME: 'request-activity-mode',
+
   isLocked: false,
 
   // Will hold current activity object
-  currentActivity: { new: null },
+  _activity: null,
 
   init: function() {
     if (!window.navigator.mozSetMessageHandler) {
       return;
     }
-    window.navigator.mozSetMessageHandler('activity', this.global.bind(this));
+
+    // A mapping of MozActivity names to their associated event handler
+    window.navigator.mozSetMessageHandler('activity',
+      this._onActivity.bind(this, {
+        'new': this._onNewActivity,
+        'share': this._onShareActivity
+      })
+    );
 
     // We want to register the handler only when we're on the launch path
     if (!window.location.hash.length) {
@@ -30,108 +40,109 @@ var ActivityHandler = {
     }
   },
 
+  isInActivity: function isInActivity() {
+    return !!this._activity;
+  },
+
+  setActivity: function setActivity(value) {
+    this._toggleActivityRequestMode(!!value);
+    this._activity = value;
+  },
+
   // The Messaging application's global Activity handler. Delegates to specific
   // handler based on the Activity name.
-  global: function activityHandler(activity) {
-
+  _onActivity: function activityHandler(handlers, activity) {
     var name = activity.source.name;
-    var handler = this._handlers[name];
+    var handler = handlers[name];
 
     if (typeof handler === 'function') {
-      handler.apply(this, arguments);
+      this.setActivity(activity);
+
+      handler.call(this, activity);
     } else {
       console.error('Unrecognized activity: "' + name + '"');
     }
   },
 
-  // A mapping of MozActivity names to their associated event handler
-  _handlers: {
-    'new': function newHandler(activity) {
-
-      // This lock is for avoiding several calls at the same time.
-      if (this.isLocked) {
-        return;
-      }
-
-      this.currentActivity.new = activity;
-      this.isLocked = true;
-
-      var number = activity.source.data.number;
-      var body = activity.source.data.body;
-
-      Contacts.findByPhoneNumber(number, function findContact(results) {
-        var record, details, name, contact;
-
-        // Bug 867948: results null is a legitimate case
-        if (results && results.length) {
-          record = results[0];
-          details = Utils.getContactDetails(number, record);
-          name = record.name.length && record.name[0];
-          contact = {
-            number: number,
-            name: name,
-            source: 'contacts'
-          };
-        }
-
-        ActivityHandler.toView({
-          body: body,
-          number: number,
-          contact: contact || null
-        });
-      });
-
-      ThreadUI.enableActivityRequestMode();
-    },
-    share: function shareHandler(activity) {
-      var blobs = activity.source.data.blobs,
-        names = activity.source.data.filenames;
-
-      function insertAttachments() {
-        window.removeEventListener('hashchange', insertAttachments);
-
-        var attachments = blobs.map(function(blob, idx) {
-          var attachment = new Attachment(blob, {
-            name: names[idx],
-            isDraft: true
-          });
-
-          return attachment;
-        });
-
-        var size = attachments.reduce(function(size, attachment) {
-          if (attachment.type !== 'img') {
-            size += attachment.size;
-          }
-
-          return size;
-        }, 0);
-
-        if (size > Settings.mmsSizeLimitation) {
-          alert(navigator.mozL10n.get('files-too-large', { n: blobs.length }));
-          return;
-        }
-
-        ThreadUI.cleanFields(true);
-        Compose.append(attachments);
-      }
-
-      // Navigating to the 'New Message' page is an asynchronous operation that
-      // clears the Composition field. If the application is not already in the
-      // 'New Message' page, delay attachment insertion until after the
-      // navigation is complete.
-      if (window.location.hash !== '#new') {
-        window.addEventListener('hashchange', insertAttachments);
-        window.location.hash = '#new';
-      } else {
-        insertAttachments();
-      }
+  _onNewActivity: function newHandler(activity) {
+    // This lock is for avoiding several calls at the same time.
+    if (this.isLocked) {
+      return;
     }
+
+    this.isLocked = true;
+
+    var number = activity.source.data.number;
+    var body = activity.source.data.body;
+
+    Contacts.findByPhoneNumber(number, function findContact(results) {
+      var record, details, name, contact;
+
+      // Bug 867948: results null is a legitimate case
+      if (results && results.length) {
+        record = results[0];
+        details = Utils.getContactDetails(number, record);
+        name = record.name.length && record.name[0];
+        contact = {
+          number: number,
+          name: name,
+          source: 'contacts'
+        };
+      }
+
+      ActivityHandler.toView({
+        body: body,
+        number: number,
+        contact: contact || null
+      });
+    });
   },
 
-  resetActivity: function ah_resetActivity() {
-    this.currentActivity.new = null;
-    ThreadUI.resetActivityRequestMode();
+  _onShareActivity: function shareHandler(activity) {
+    var activityData = activity.source.data;
+
+    var attachments = activityData.blobs.map(function(blob, idx) {
+      var attachment = new Attachment(blob, {
+        name: activityData.filenames[idx],
+        isDraft: true
+      });
+
+      return attachment;
+    });
+
+    var size = attachments.reduce(function(size, attachment) {
+      if (attachment.type !== 'img') {
+        size += attachment.size;
+      }
+
+      return size;
+    }, 0);
+
+    if (size > Settings.mmsSizeLimitation) {
+      alert(navigator.mozL10n.get('files-too-large', {
+        n: activityData.blobs.length
+      }));
+      this.leaveActivity();
+      return;
+    }
+
+    ActivityHandler.toView({
+      attachments: attachments
+    });
+  },
+
+  _toggleActivityRequestMode: function(toggle) {
+    document.body.classList.toggle(
+      this.REQUEST_ACTIVITY_MODE_CLASS_NAME,
+      toggle
+    );
+  },
+
+  leaveActivity: function ah_leaveActivity() {
+    if (this.isInActivity()) {
+      this._activity.postResult({ success: true });
+      this.setActivity(null);
+    }
   },
 
   handleMessageNotification: function ah_handleMessageNotification(message) {
@@ -199,7 +210,8 @@ var ActivityHandler = {
 
   // Check if we want to go directly to the composer or if we
   // want to keep the previously typed text
-  triggerNewMessage: function ah_triggerNewMessage(body, number, contact) {
+  triggerNewMessage: function ah_triggerNewMessage(body, number, contact,
+    attachments) {
     /**
      * case 1: hash === #new
      *         check compose is empty or show dialog, and call onHashChange
@@ -210,7 +222,8 @@ var ActivityHandler = {
      var activity = {
         body: body || null,
         number: number || null,
-        contact: contact || null
+        contact: contact || null,
+        attachments: attachments || null
       };
 
     if (Compose.isEmpty()) {
@@ -242,6 +255,8 @@ var ActivityHandler = {
      *    threadId: An option threadId corresponding
      *              to a new or existing thread.
      *
+     *    attachments: An optional attachment list
+     *
      *  }
      */
 
@@ -253,13 +268,14 @@ var ActivityHandler = {
     var body = message.body ? Template.escape(message.body) : '';
     var number = message.number ? message.number : '';
     var contact = message.contact ? message.contact : null;
+    var attachments = message.attachments || null;
     var threadHash = '#thread=' + threadId;
 
     var showAction = function act_action() {
       // If we only have a body, just trigger a new message.
       var locationHash = window.location.hash;
       if (!threadId) {
-        ActivityHandler.triggerNewMessage(body, number, contact);
+        ActivityHandler.triggerNewMessage(body, number, contact, attachments);
         return;
       }
 

@@ -4088,18 +4088,17 @@ suite('thread_ui.js >', function() {
         assert.equal(window.location.hash, '#thread-list');
       });
 
-      test('then closes the activity if we\'re in an an activity', function() {
-        var mockActivity = {
-          postResult: sinon.stub()
-        };
-
-        ActivityHandler.currentActivity.new = mockActivity;
-        ThreadUI.enableActivityRequestMode();
-
+      test('then leaves the activity if we\'re in an activity', function(done) {
+        this.sinon.stub(MockOptionMenu.prototype, 'show', function() {
+          MockOptionMenu.calls[0].items[0].method();
+        });
+        this.sinon.stub(ActivityHandler, 'isInActivity').returns(true);
+        this.sinon.stub(ActivityHandler, 'leaveActivity', function() {
+          done();
+        });
         sendSmsToSeveralRecipients();
         assert.equal(window.location.hash, '#thread-list');
         this.sinon.clock.tick(3000);
-        sinon.assert.called(mockActivity.postResult);
       });
     });
 
@@ -4412,16 +4411,6 @@ suite('thread_ui.js >', function() {
       ThreadUI.initSentAudio();
       assert.isTrue(ThreadUI.sentAudio.src.endsWith('/sounds/sent.opus'));
       assert.equal(ThreadUI.sentAudio.mozAudioChannelType, 'notification');
-    });
-  });
-
-  suite('enableActivityRequestMode', function() {
-    test('calling function change the back button icon', function() {
-      var backButtonSpan = ThreadUI.backButton.querySelector('span');
-
-      ThreadUI.enableActivityRequestMode();
-      assert.isTrue(backButtonSpan.classList.contains('icon-close'));
-      assert.isFalse(backButtonSpan.classList.contains('icon-back'));
     });
   });
 
@@ -4750,38 +4739,16 @@ suite('thread_ui.js >', function() {
   });
 
   suite('Back button behaviour', function() {
-
-    suite('During activity', function() {
-      setup(function() {
-        this.sinon.stub(ThreadUI, 'isKeyboardDisplayed').returns(false);
-        this.sinon.stub(ThreadUI, 'stopRendering');
-        ThreadUI.enableActivityRequestMode();
-      });
-
-      test('Call postResult when there is an activity', function() {
-        var mockActivity = {
-          postResult: sinon.stub()
-        };
-
-        ActivityHandler.currentActivity.new = mockActivity;
-
-        ThreadUI.back();
-        sinon.assert.called(mockActivity.postResult);
-      });
-    });
-
     suite('From new message', function() {
       var showCalled = false;
-      var spy;
-
-      suiteSetup(function() {
-        spy = sinon.spy(ThreadUI, 'saveDraft');
-      });
+      var optionMenuTargetItemIndex = 0;
 
       setup(function() {
         showCalled = false;
         this.sinon.stub(window, 'OptionMenu').returns({
           show: function() {
+            var item = OptionMenu.args[0][0].items[optionMenuTargetItemIndex];
+            item.method.apply(null);
             showCalled = true;
           },
           hide: function() {}
@@ -4799,77 +4766,90 @@ suite('thread_ui.js >', function() {
         ThreadUI.draft = null;
       });
 
-      test('Displays OptionMenu prompt if recipients', function() {
-        ThreadUI.back();
+      test('Displays OptionMenu prompt if recipients', function(done) {
+        ThreadUI.back().then(function() {
+          assert.isTrue(OptionMenu.calledOnce);
+          assert.isTrue(showCalled);
 
-        assert.isTrue(OptionMenu.calledOnce);
-        assert.isTrue(showCalled);
+          var items = OptionMenu.args[0][0].items;
 
-        var items = OptionMenu.args[0][0].items;
+          // Assert the correct menu items were displayed
+          assert.equal(items[0].l10nId, 'save-as-draft');
+          assert.equal(items[1].l10nId, 'discard-message');
+          assert.equal(items[2].l10nId, 'cancel');
 
-        // Assert the correct menu items were displayed
-        assert.equal(items[0].l10nId, 'save-as-draft');
-        assert.equal(items[1].l10nId, 'discard-message');
-        assert.equal(items[2].l10nId, 'cancel');
+          done();
+        });
       });
 
-      test('Displays OptionMenu prompt if recipients & content', function() {
+      test('Displays OptionMenu prompt if recipients & content',
+        function(done) {
+
         Compose.append('foo');
-        ThreadUI.back();
+        ThreadUI.back().then(function() {
+          assert.isTrue(OptionMenu.calledOnce);
+          assert.isTrue(showCalled);
 
-        assert.isTrue(OptionMenu.calledOnce);
-        assert.isTrue(showCalled);
+          var items = OptionMenu.args[0][0].items;
 
-        var items = OptionMenu.args[0][0].items;
+          // Assert the correct menu items were displayed
+          assert.equal(items[0].l10nId, 'save-as-draft');
+          assert.equal(items[1].l10nId, 'discard-message');
+          assert.equal(items[2].l10nId, 'cancel');
 
-        // Assert the correct menu items were displayed
-        assert.equal(items[0].l10nId, 'save-as-draft');
-        assert.equal(items[1].l10nId, 'discard-message');
-        assert.equal(items[2].l10nId, 'cancel');
+          done();
+        });
       });
 
-      test('Displays OptionMenu prompt if content', function() {
+      test('Displays OptionMenu prompt if content', function(done) {
         ThreadUI.recipients.remove('999');
         Compose.append('foo');
-        ThreadUI.back();
+        ThreadUI.back().then(function() {
+          assert.isTrue(OptionMenu.calledOnce);
+          assert.isTrue(showCalled);
 
-        assert.isTrue(OptionMenu.calledOnce);
-        assert.isTrue(showCalled);
+          var items = OptionMenu.args[0][0].items;
 
-        var items = OptionMenu.args[0][0].items;
+          // Assert the correct menu items were displayed
+          assert.equal(items[0].l10nId, 'save-as-draft');
+          assert.equal(items[1].l10nId, 'discard-message');
+          assert.equal(items[2].l10nId, 'cancel');
 
-        // Assert the correct menu items were displayed
-        assert.equal(items[0].l10nId, 'save-as-draft');
-        assert.equal(items[1].l10nId, 'discard-message');
-        assert.equal(items[2].l10nId, 'cancel');
+          done();
+        });
       });
 
       suite('OptionMenu operations', function() {
-        test('Save as Draft', function() {
-          ThreadUI.back();
+        test('Save as Draft', function(done) {
+          var spy = this.sinon.spy(ThreadUI, 'saveDraft');
+          optionMenuTargetItemIndex = 0;
 
-          OptionMenu.args[0][0].items[0].method();
+          ThreadUI.back().then(function() {
+            // These things will be true
+            assert.isTrue(spy.calledOnce);
+            assert.equal(window.location.hash, '#thread-list');
+            assert.equal(ThreadUI.recipients.length, 0);
+            assert.equal(Compose.getContent(), '');
 
-          // These things will be true
-          assert.isTrue(spy.calledOnce);
-          assert.equal(window.location.hash, '#thread-list');
-          assert.equal(ThreadUI.recipients.length, 0);
-          assert.equal(Compose.getContent(), '');
+            done();
+          });
         });
 
-        test('Discard', function() {
+        test('Discard', function(done) {
+          var spy = this.sinon.spy(ThreadListUI, 'removeThread');
+          optionMenuTargetItemIndex = 1;
           ThreadUI.draft = new Draft({id: 3});
           ThreadUI.draft.isEdited = true;
-          var spy = this.sinon.spy(ThreadListUI, 'removeThread');
-          ThreadUI.back();
 
-          OptionMenu.args[0][0].items[1].method();
+          ThreadUI.back().then(function() {
+            assert.equal(window.location.hash, '#thread-list');
+            assert.equal(ThreadUI.recipients.length, 0);
+            assert.equal(Compose.getContent(), '');
+            assert.isTrue(spy.calledOnce);
+            assert.isNull(ThreadUI.draft);
 
-          assert.equal(window.location.hash, '#thread-list');
-          assert.equal(ThreadUI.recipients.length, 0);
-          assert.equal(Compose.getContent(), '');
-          assert.isTrue(spy.calledOnce);
-          assert.isNull(ThreadUI.draft);
+            done();
+          });
         });
       });
 
@@ -4889,49 +4869,57 @@ suite('thread_ui.js >', function() {
             ThreadUI.draft.isEdited = true; // can't set this via options
           });
 
-          test('Prompts for replacement if recipients', function() {
-            ThreadUI.back();
+          test('Prompts for replacement if recipients', function(done) {
+            ThreadUI.back().then(function() {
+              assert.isTrue(OptionMenu.calledOnce);
+              assert.isTrue(showCalled);
 
-            assert.isTrue(OptionMenu.calledOnce);
-            assert.isTrue(showCalled);
+              var items = OptionMenu.args[0][0].items;
 
-            var items = OptionMenu.args[0][0].items;
+              // Assert the correct menu items were displayed
+              assert.equal(items[0].l10nId, 'replace-draft');
+              assert.equal(items[1].l10nId, 'discard-message');
+              assert.equal(items[2].l10nId, 'cancel');
 
-            // Assert the correct menu items were displayed
-            assert.equal(items[0].l10nId, 'replace-draft');
-            assert.equal(items[1].l10nId, 'discard-message');
-            assert.equal(items[2].l10nId, 'cancel');
+              done();
+            });
           });
 
-          test('Prompts for replacement if recipients & content', function() {
+          test('Prompts for replacement if recipients & content',
+            function(done) {
+
             Compose.append('foo');
-            ThreadUI.back();
+            ThreadUI.back().then(function() {
+              assert.isTrue(OptionMenu.calledOnce);
+              assert.isTrue(showCalled);
 
-            assert.isTrue(OptionMenu.calledOnce);
-            assert.isTrue(showCalled);
+              var items = OptionMenu.args[0][0].items;
 
-            var items = OptionMenu.args[0][0].items;
+              // Assert the correct menu items were displayed
+              assert.equal(items[0].l10nId, 'replace-draft');
+              assert.equal(items[1].l10nId, 'discard-message');
+              assert.equal(items[2].l10nId, 'cancel');
 
-            // Assert the correct menu items were displayed
-            assert.equal(items[0].l10nId, 'replace-draft');
-            assert.equal(items[1].l10nId, 'discard-message');
-            assert.equal(items[2].l10nId, 'cancel');
+              done();
+            });
           });
 
-          test('Prompts for replacement if content', function() {
+          test('Prompts for replacement if content', function(done) {
             ThreadUI.recipients.remove('999');
             Compose.append('foo');
-            ThreadUI.back();
+            ThreadUI.back().then(function() {
+              assert.isTrue(OptionMenu.calledOnce);
+              assert.isTrue(showCalled);
 
-            assert.isTrue(OptionMenu.calledOnce);
-            assert.isTrue(showCalled);
+              var items = OptionMenu.args[0][0].items;
 
-            var items = OptionMenu.args[0][0].items;
+              // Assert the correct menu items were displayed
+              assert.equal(items[0].l10nId, 'replace-draft');
+              assert.equal(items[1].l10nId, 'discard-message');
+              assert.equal(items[2].l10nId, 'cancel');
 
-            // Assert the correct menu items were displayed
-            assert.equal(items[0].l10nId, 'replace-draft');
-            assert.equal(items[1].l10nId, 'discard-message');
-            assert.equal(items[2].l10nId, 'cancel');
+              done();
+            });
           });
         });
 
@@ -4941,33 +4929,50 @@ suite('thread_ui.js >', function() {
             ThreadUI.draft = {id: 55};
           });
 
-          test('No prompt for replacement if recipients', function() {
+          test('No prompt for replacement if recipients', function(done) {
             ThreadUI.draft.isEdited = false;
-            ThreadUI.back();
+            ThreadUI.back().then(function() {
+              assert.isFalse(OptionMenu.calledOnce);
+              assert.isFalse(showCalled);
 
-            assert.isFalse(OptionMenu.calledOnce);
-            assert.isFalse(showCalled);
+              done();
+            });
           });
 
-          test('No prompt for replacement if recipients & content', function() {
+          test('No prompt for replacement if recipients & content',
+            function(done) {
+
             Compose.append('foo');
             ThreadUI.draft.isEdited = false;
-            ThreadUI.back();
+            ThreadUI.back().then(function() {
+              assert.isFalse(OptionMenu.calledOnce);
+              assert.isFalse(showCalled);
 
-            assert.isFalse(OptionMenu.calledOnce);
-            assert.isFalse(showCalled);
+              done();
+            });
           });
 
-          test('No prompt for replacement if content', function() {
+          test('No prompt for replacement if content', function(done) {
             ThreadUI.recipients.remove('999');
             Compose.append('foo');
             ThreadUI.draft.isEdited = false;
-            ThreadUI.back();
+            ThreadUI.back().then(function() {
+              assert.isFalse(OptionMenu.calledOnce);
+              assert.isFalse(showCalled);
 
-            assert.isFalse(OptionMenu.calledOnce);
-            assert.isFalse(showCalled);
+              done();
+            });
           });
         });
+      });
+    });
+  });
+  suite('Close button behaviour', function() {
+    test('Call ActivityHandler.leaveActivity', function(done) {
+      this.sinon.stub(ActivityHandler, 'leaveActivity');
+      ThreadUI.close().then(function() {
+        sinon.assert.called(ActivityHandler.leaveActivity);
+        done();
       });
     });
   });

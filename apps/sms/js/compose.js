@@ -418,6 +418,11 @@ var Compose = (function() {
           this.focus();
         }.bind(this));
         this.ignoreEvents = true;
+      } else if (message.attachments) {
+        message.attachments.forEach(function(attachment) {
+          Compose.append(attachment);
+        });
+        this.focus();
       } else {
         this.append(message.body ? message.body : '');
         this.focus();
