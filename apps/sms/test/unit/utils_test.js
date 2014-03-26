@@ -1,5 +1,6 @@
 /*global MockL10n, Utils, MockContact, FixturePhones, MockContactPhotoHelper,
-         MockContacts, MockMozPhoneNumberService, MocksHelper */
+         MockContacts, MockMozPhoneNumberService, MocksHelper, Notification,
+         MockNotification, Threads */
 
 'use strict';
 
@@ -9,9 +10,13 @@ requireApp('sms/test/unit/mock_l10n.js');
 requireApp('sms/test/unit/mock_navigator_mozphonenumberservice.js');
 require('/shared/test/unit/mocks/mock_contact_photo_helper.js');
 requireApp('sms/js/utils.js');
+requireApp('sms/shared/test/unit/mocks/mock_notification.js');
+requireApp('sms/test/unit/mock_threads.js');
 
 var MocksHelperForUtilsUnitTest = new MocksHelper([
-  'ContactPhotoHelper'
+  'ContactPhotoHelper',
+  'Notification',
+  'Threads'
 ]).init();
 
 
@@ -928,6 +933,57 @@ suite('Utils', function() {
       test(testIndex, function() {
         assert.deepEqual(Utils.params(testIndex), tests[testIndex]);
       });
+    });
+  });
+
+  suite('Utils.closeNotificationsForThread', function() {
+    var closeSpy;
+    var errorMessage;
+
+    setup(function() {
+      this.sinon.stub(Notification, 'get',
+        function notificationGet(opts) {
+          return {
+            then: function(onSuccess, onError, onProgress) {
+              if (opts.tag === 'threadId:broken') {
+                onError(errorMessage);
+              } else if (opts.tag  === 'threadId:matched') {
+                onSuccess([new Notification('1', opts)]);
+              } else {
+                onSuccess([]);
+              }
+            }
+          };
+        }
+      );
+      closeSpy = this.sinon.spy(MockNotification.prototype, 'close');
+    });
+
+    test('notification matched with no threadId given(current Id)', function(){
+      Threads.currentId = 'currentId';
+      Utils.closeNotificationsForThread();
+      sinon.assert.calledWith(Notification.get,
+        {tag : 'threadId:' + Threads.currentId});
+    });
+    test('notification matched with specific threadId', function(){
+      Utils.closeNotificationsForThread('targetId');
+      sinon.assert.calledWith(Notification.get, {tag : 'threadId:targetId'});
+    });
+    test('notification matched', function(){
+      Utils.closeNotificationsForThread('matched');
+      sinon.assert.called(closeSpy);
+    });
+    test('no notification matched', function(){
+      Utils.closeNotificationsForThread('not-matched');
+      sinon.assert.notCalled(closeSpy);
+    });
+    test('Get Notification error', function(){
+      this.sinon.spy(console, 'error');
+      errorMessage = 'error callback test';
+      Utils.closeNotificationsForThread('broken');
+      sinon.assert.notCalled(closeSpy);
+      sinon.assert.calledWith(console.error,
+        'Notification.get(tag: threadId:broken): ' + errorMessage);
     });
   });
 });
