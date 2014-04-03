@@ -1,6 +1,6 @@
 /*global MockL10n, Utils, MockContact, FixturePhones, MockContactPhotoHelper,
          MockContacts, MockMozPhoneNumberService, MocksHelper, Notification,
-         MockNotification, Threads */
+         MockNotification, Threads, Promise */
 
 'use strict';
 
@@ -939,23 +939,11 @@ suite('Utils', function() {
   suite('Utils.closeNotificationsForThread', function() {
     var closeSpy;
     var errorMessage;
+    var getPromise = new Promise(function() {});
+    var thenPromise = new Promise(function() {});
 
     setup(function() {
-      this.sinon.stub(Notification, 'get',
-        function notificationGet(opts) {
-          return {
-            then: function(onSuccess, onError, onProgress) {
-              if (opts.tag === 'threadId:broken') {
-                onError(errorMessage);
-              } else if (opts.tag  === 'threadId:matched') {
-                onSuccess([new Notification('1', opts)]);
-              } else {
-                onSuccess([]);
-              }
-            }
-          };
-        }
-      );
+      this.sinon.stub(Notification, 'get').returns(getPromise);
       closeSpy = this.sinon.spy(MockNotification.prototype, 'close');
     });
 
@@ -970,20 +958,34 @@ suite('Utils', function() {
       sinon.assert.calledWith(Notification.get, {tag : 'threadId:targetId'});
     });
     test('notification matched', function(){
+      this.sinon.stub(getPromise, 'then', function(resolve, reject) {
+        resolve([new Notification('test', {})]);
+        sinon.assert.called(closeSpy);
+        return thenPromise;
+      });
       Utils.closeNotificationsForThread('matched');
-      sinon.assert.called(closeSpy);
     });
     test('no notification matched', function(){
+      this.sinon.stub(getPromise, 'then', function(resolve, reject) {
+        resolve([]);
+        sinon.assert.notCalled(closeSpy);
+        return thenPromise;
+      });
+
       Utils.closeNotificationsForThread('not-matched');
-      sinon.assert.notCalled(closeSpy);
     });
     test('Get Notification error', function(){
       this.sinon.spy(console, 'error');
       errorMessage = 'error callback test';
+      this.sinon.stub(getPromise, 'then').returns(thenPromise);
+      this.sinon.stub(thenPromise, 'catch', function(reject) {
+        reject(errorMessage);
+        sinon.assert.notCalled(closeSpy);
+        sinon.assert.calledWith(console.error,
+          'Notification.get(tag: threadId:broken): ', errorMessage);
+      });
+
       Utils.closeNotificationsForThread('broken');
-      sinon.assert.notCalled(closeSpy);
-      sinon.assert.calledWith(console.error,
-        'Notification.get(tag: threadId:broken): ' + errorMessage);
     });
   });
 });

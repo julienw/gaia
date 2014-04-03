@@ -546,11 +546,15 @@
 
     /*
       Helper function for removing notifications. It will fetch the notification
-      contains current threadID tag or specific threadID if parameter provided,
-      and close them from the list.
+      using the current threadId or the parameter if provided, and close them
+       from the returned list.
     */
     closeNotificationsForThread: function ut_closeNotificationsForThread(tid) {
       var threadId = tid ? tid : Threads.currentId;
+      if (!threadId) {
+        return;
+      }
+
       var targetTag = 'threadId:' + threadId;
 
       Notification.get({tag: targetTag})
@@ -559,12 +563,10 @@
             for (var i = 0; i < notifications.length; i++) {
               notifications[i].close();
             }
-          },
-          function onError(reason) {
-            console.error('Notification.get(tag: ' + targetTag + '): ' +
-              reason);
           }
-        );
+        ).catch(function onError(reason) {
+          console.error('Notification.get(tag: ' + targetTag + '): ', reason);
+        });
     }
   };
 
