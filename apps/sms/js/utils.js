@@ -557,7 +557,7 @@
 
       var targetTag = 'threadId:' + threadId;
 
-      Notification.get({tag: targetTag})
+      return Notification.get({tag: targetTag})
         .then(
           function onSuccess(notifications) {
             for (var i = 0; i < notifications.length; i++) {

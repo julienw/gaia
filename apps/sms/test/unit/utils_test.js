@@ -937,55 +937,69 @@ suite('Utils', function() {
   });
 
   suite('Utils.closeNotificationsForThread', function() {
-    var closeSpy;
-    var errorMessage;
-    var getPromise = new Promise(function() {});
-    var thenPromise = new Promise(function() {});
+    var closeStub;
 
     setup(function() {
-      this.sinon.stub(Notification, 'get').returns(getPromise);
-      closeSpy = this.sinon.spy(MockNotification.prototype, 'close');
-    });
-
-    test('notification matched with no threadId given(current Id)', function(){
-      Threads.currentId = 'currentId';
-      Utils.closeNotificationsForThread();
-      sinon.assert.calledWith(Notification.get,
-        {tag : 'threadId:' + Threads.currentId});
-    });
-    test('notification matched with specific threadId', function(){
-      Utils.closeNotificationsForThread('targetId');
-      sinon.assert.calledWith(Notification.get, {tag : 'threadId:targetId'});
-    });
-    test('notification matched', function(){
-      this.sinon.stub(getPromise, 'then', function(resolve, reject) {
-        resolve([new Notification('test', {})]);
-        sinon.assert.called(closeSpy);
-        return thenPromise;
-      });
-      Utils.closeNotificationsForThread('matched');
-    });
-    test('no notification matched', function(){
-      this.sinon.stub(getPromise, 'then', function(resolve, reject) {
-        resolve([]);
-        sinon.assert.notCalled(closeSpy);
-        return thenPromise;
-      });
-
-      Utils.closeNotificationsForThread('not-matched');
-    });
-    test('Get Notification error', function(){
+      this.sinon.stub(Notification, 'get').returns(Promise.resolve([]));
       this.sinon.spy(console, 'error');
-      errorMessage = 'error callback test';
-      this.sinon.stub(getPromise, 'then').returns(thenPromise);
-      this.sinon.stub(thenPromise, 'catch', function(reject) {
-        reject(errorMessage);
-        sinon.assert.notCalled(closeSpy);
-        sinon.assert.calledWith(console.error,
-          'Notification.get(tag: threadId:broken): ', errorMessage);
-      });
+      closeStub = this.sinon.stub(MockNotification.prototype, 'close');
+    });
 
-      Utils.closeNotificationsForThread('broken');
+    test('notification matched with no threadId given(current Id)',
+    function(done) {
+      Threads.currentId = 'currentId';
+      Utils.closeNotificationsForThread().then(function() {
+        sinon.assert.calledWith(Notification.get,
+          {tag : 'threadId:' + Threads.currentId});
+      }).then(done, done);
+    });
+
+    test('notification matched with specific threadId', function(done) {
+      Utils.closeNotificationsForThread('targetId').then(function() {
+        sinon.assert.calledWith(Notification.get, {tag : 'threadId:targetId'});
+      }).then(done, done);
+    });
+
+    test('notification matched', function(done) {
+      var notification = new Notification('test', {});
+      Notification.get.returns(Promise.resolve([notification]));
+      Utils.closeNotificationsForThread('matched').then(function() {
+        sinon.assert.called(closeStub);
+      }).then(done, done);
+    });
+
+    test('no notification matched', function(done) {
+      Notification.get.returns(Promise.resolve([]));
+      Utils.closeNotificationsForThread('not-matched').then(function() {
+        sinon.assert.notCalled(closeStub);
+      }).then(done, done);
+    });
+
+    test('Get Notification error', function(done) {
+      var errorMessage = 'error callback test';
+
+      Notification.get.returns(Promise.reject(errorMessage));
+
+      Utils.closeNotificationsForThread('broken').then(function() {
+        sinon.assert.notCalled(closeStub);
+        sinon.assert.calledWith(
+          console.error,
+          'Notification.get(tag: threadId:broken): ', errorMessage
+        );
+      }).then(done, done);
+    });
+
+    test('closing notification error', function(done) {
+      closeStub.throws('GenericError');
+      var notification = new Notification('test', {});
+      Notification.get.returns(Promise.resolve([notification]));
+      Utils.closeNotificationsForThread('closeError').then(function() {
+        sinon.assert.called(closeStub);
+        sinon.assert.calledWith(
+          console.error,
+          'Notification.get(tag: threadId:closeError): '
+        );
+      }).then(done, done);
     });
   });
 });
