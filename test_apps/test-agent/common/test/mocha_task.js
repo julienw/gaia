@@ -3,12 +3,42 @@
  * Used to provide generator yields for mocha test.
  */
 var MochaTask = (function() {
-  var current, done, errorHandler;
+  'use strict';
+
+  let currentGenerator,
+      completeHandler,
+      errorHandler;
 
   function clearState() {
-    done = null;
-    current = null;
+    completeHandler = null;
+    currentGenerator = null;
     errorHandler = null;
+  }
+
+  function completeIfRequired(iterationResult) {
+    if (iterationResult.done) {
+      // Assign references so we can clear state without messing up execution
+      // order later.
+      let onComplete = completeHandler;
+
+      clearState();
+
+      if (onComplete) {
+        onComplete();
+      }
+    }
+  }
+
+  function handleException(e) {
+    // Assign references so we can clear state without messing up execution
+    // order later.
+    let onError = errorHandler;
+
+    clearState();
+
+    if (onError) {
+      onError(e);
+    }
   }
 
   return {
@@ -23,16 +53,16 @@ var MochaTask = (function() {
      * @param {Function} error error callback receives an Error instance.
      */
     start: function(generator, success, error) {
-      current = generator;
-      if (!current.next) {
-        current = generator.call(this);
+      currentGenerator = generator;
+      if (!currentGenerator.next) {
+        currentGenerator = generator.call(this);
       }
 
-      done = success;
+      completeHandler = success;
       errorHandler = error;
 
-      if (current && current.next) {
-        current.next();
+      if (currentGenerator && currentGenerator.next) {
+        currentGenerator.next();
       }
 
       return this;
@@ -54,73 +84,24 @@ var MochaTask = (function() {
      * @param {Object} value object to pass to generator.
      */
     next: function(value) {
-      //assign references so we
-      //can clear state without messing
-      //up execution order later.
-      var complete = done,
-          generator = current,
-          handler = errorHandler;
-
       try {
-        generator.send(value);
+        completeIfRequired(currentGenerator.next(value));
       } catch (e) {
-        if (e instanceof StopIteration) {
-          clearState();
-
-          if (complete) {
-            complete();
-          }
-        } else {
-          clearState();
-
-          if (handler) {
-            handler(e);
-          }
-        }
+        handleException(e);
       }
     },
 
     nextNodeStyle: function(error, value) {
-      //assign references so we
-      //can clear state without messing
-      //up execution order later.
-      var complete = done,
-          generator = current,
-          handler = errorHandler;
-
       if (error) {
         try {
-          generator.throw(error);
+          completeIfRequired(currentGenerator.throw(error));
         } catch (e) {
-          if (!(e instanceof StopIteration)) {
-            handler(e);
-          } else {
-            clearState();
-            if (complete) {
-              complete();
-            }
-          }
+          handleException(e);
         }
         return;
       }
 
-      try {
-        generator.send(value);
-      } catch (e) {
-        if (e instanceof StopIteration) {
-          clearState();
-          if (complete) {
-            complete();
-          }
-        } else {
-          clearState();
-          if (handler) {
-            handler(e);
-          }
-        }
-      }
+      this.next(value);
     }
-
   };
-
 }());

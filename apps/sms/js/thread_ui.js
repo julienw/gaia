@@ -844,9 +844,11 @@ var ThreadUI = global.ThreadUI = {
   },
 
   close: function thui_close() {
-    return this._onNavigatingBack().then(function() {
+    this._onNavigatingBack().then(function() {
       ActivityHandler.leaveActivity();
-    }, function(e) {
+    }).catch(function(e) {
+      // If we don't have any error that means that action was rejected
+      // intentionally and there is nothing critical to report about.
       e && console.error('Unexpected error while closing the activity: ', e);
     });
   },
@@ -860,11 +862,11 @@ var ThreadUI = global.ThreadUI = {
       return Promise.resolve();
     }
 
-    return this._onNavigatingBack().then(function() {
+    this._onNavigatingBack().then(function() {
       this.cleanFields(true);
       window.location.hash = '#thread-list';
-    }.bind(this), function(e) {
-      e && console.error('Unexpected error while closing the activity: ', e);
+    }.bind(this)).catch(function(e) {
+      e && console.error('Unexpected error while navigating back: ', e);
     });
   },
 

@@ -160,20 +160,20 @@ suite('ActivityHandler', function() {
       assert.ok(arr.length > 0);
     });
 
-    test('Passes all attachments to the composer',
-      function(done) {
-      this.sinon.stub(ActivityHandler, 'toView', function(activity) {
-        assert.equal(activity.attachments.length, 5);
-        assert.instanceOf(activity.attachments[0], Attachment);
-        assert.instanceOf(activity.attachments[1], Attachment);
-        assert.instanceOf(activity.attachments[2], Attachment);
-        assert.instanceOf(activity.attachments[3], Attachment);
-        assert.instanceOf(activity.attachments[4], Attachment);
-
-        done();
-      });
+    test('Passes all attachments to the composer', function() {
+      this.sinon.stub(ActivityHandler, 'toView');
 
       MockNavigatormozSetMessageHandler.mTrigger('activity', shareActivity);
+
+      sinon.assert.calledWith(ActivityHandler.toView, {
+        attachments: [
+          sinon.match.instanceOf(Attachment),
+          sinon.match.instanceOf(Attachment),
+          sinon.match.instanceOf(Attachment),
+          sinon.match.instanceOf(Attachment),
+          sinon.match.instanceOf(Attachment)
+        ]
+      });
     });
 
     test('Attachment size over max mms should not be appended', function() {

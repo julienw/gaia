@@ -1,6 +1,6 @@
 suite('mocha task', function() {
 
-  test('simple generator', function() {
+  test('simple generator', function* () {
     var timePassed = false;
 
     setTimeout(function() {
@@ -15,7 +15,7 @@ suite('mocha task', function() {
     assert.ok(timePassed, 'time passed?');
   });
 
-  test('throwing an error', function() {
+  test('throwing an error', function* () {
     function throwsSomething() {
       setTimeout(function() {
         MochaTask.nextNodeStyle(new Error('generator throws'));
