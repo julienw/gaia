@@ -126,9 +126,19 @@ var ActivityHandler = {
       return;
     }
 
-    ActivityHandler.toView({
-      attachments: attachments
-    });
+    // Navigating to the 'New Message' page is an asynchronous operation that
+    // clears the Composition field. If the application is not already in the
+    // 'New Message' page, delay attachment insertion until after the
+    // navigation is complete.
+    if (window.location.hash !== '#new') {
+      window.addEventListener('hashchange', function onHashChanged() {
+        window.removeEventListener('hashchange', onHashChanged);
+        Compose.append(attachments);
+      });
+      window.location.hash = '#new';
+    } else {
+      Compose.append(attachments);
+    }
   },
 
   _toggleActivityRequestMode: function(toggle) {
@@ -210,8 +220,7 @@ var ActivityHandler = {
 
   // Check if we want to go directly to the composer or if we
   // want to keep the previously typed text
-  triggerNewMessage: function ah_triggerNewMessage(body, number, contact,
-    attachments) {
+  triggerNewMessage: function ah_triggerNewMessage(body, number, contact) {
     /**
      * case 1: hash === #new
      *         check compose is empty or show dialog, and call onHashChange
@@ -222,8 +231,7 @@ var ActivityHandler = {
      var activity = {
         body: body || null,
         number: number || null,
-        contact: contact || null,
-        attachments: attachments || null
+        contact: contact || null
       };
 
     if (Compose.isEmpty()) {
@@ -255,8 +263,6 @@ var ActivityHandler = {
      *    threadId: An option threadId corresponding
      *              to a new or existing thread.
      *
-     *    attachments: An optional attachment list
-     *
      *  }
      */
 
@@ -268,14 +274,13 @@ var ActivityHandler = {
     var body = message.body ? Template.escape(message.body) : '';
     var number = message.number ? message.number : '';
     var contact = message.contact ? message.contact : null;
-    var attachments = message.attachments || null;
     var threadHash = '#thread=' + threadId;
 
     var showAction = function act_action() {
       // If we only have a body, just trigger a new message.
       var locationHash = window.location.hash;
       if (!threadId) {
-        ActivityHandler.triggerNewMessage(body, number, contact, attachments);
+        ActivityHandler.triggerNewMessage(body, number, contact);
         return;
       }
 

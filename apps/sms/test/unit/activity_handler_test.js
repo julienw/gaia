@@ -160,45 +160,51 @@ suite('ActivityHandler', function() {
       assert.ok(arr.length > 0);
     });
 
-    test('Passes all attachments to the composer', function() {
-      this.sinon.stub(ActivityHandler, 'toView');
+    test('modifies the URL "hash" when necessary', function() {
+      window.location.hash = '#wrong-location';
+      MockNavigatormozSetMessageHandler.mTrigger('activity', shareActivity);
+      assert.equal(window.location.hash, '#new');
+    });
+
+    test('Appends an attachment to the Compose field for each media file',
+      function() {
+      this.sinon.stub(Compose, 'append');
+      window.location.hash = '#new';
 
       MockNavigatormozSetMessageHandler.mTrigger('activity', shareActivity);
 
-      sinon.assert.calledWith(ActivityHandler.toView, {
-        attachments: [
-          sinon.match.instanceOf(Attachment),
-          sinon.match.instanceOf(Attachment),
-          sinon.match.instanceOf(Attachment),
-          sinon.match.instanceOf(Attachment),
-          sinon.match.instanceOf(Attachment)
-        ]
-      });
+      sinon.assert.calledWith(Compose.append, [
+        sinon.match.instanceOf(Attachment),
+        sinon.match.instanceOf(Attachment),
+        sinon.match.instanceOf(Attachment),
+        sinon.match.instanceOf(Attachment),
+        sinon.match.instanceOf(Attachment)
+      ]);
     });
 
     test('Attachment size over max mms should not be appended', function() {
       // Adjust mmsSizeLimitation for verifying alert popup when size over
       // limitation
       Settings.mmsSizeLimitation = 1;
-      this.sinon.stub(ActivityHandler, 'toView');
+      this.sinon.spy(Compose, 'append');
+      window.location.hash = '#new';
 
       MockNavigatormozSetMessageHandler.mTrigger('activity', shareActivity);
-      sinon.assert.notCalled(ActivityHandler.toView);
+      sinon.assert.notCalled(Compose.append);
       sinon.assert.calledWith(window.alert, 'files-too-large{"n":5}');
-      sinon.assert.called(shareActivity.postResult);
     });
-    
-    test('Should append images even when they are big', function() {
-      this.sinon.stub(ActivityHandler, 'toView');
 
+    test('Should append images even when they are big', function() {
       shareActivity.source.data.blobs = [
         new Blob(['test'], { type: 'image/jpeg' }),
       ];
 
       Settings.mmsSizeLimitation = 1;
+      this.sinon.spy(Compose, 'append');
+      window.location.hash = '#new';
 
       MockNavigatormozSetMessageHandler.mTrigger('activity', shareActivity);
-      sinon.assert.called(ActivityHandler.toView);
+      sinon.assert.called(Compose.append);
       sinon.assert.notCalled(window.alert);
     });
 
