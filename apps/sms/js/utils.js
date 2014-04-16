@@ -541,7 +541,7 @@
         image.onload = image.onerror = function revokePhotoURL() {
           window.URL.revokeObjectURL(this.src);
         };
-      });
+      }, 30000);
     },
 
     /*
