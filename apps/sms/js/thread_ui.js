@@ -844,7 +844,7 @@ var ThreadUI = global.ThreadUI = {
   },
 
   close: function thui_close() {
-    this._onNavigatingBack().then(function() {
+    return this._onNavigatingBack().then(function() {
       ActivityHandler.leaveActivity();
     }).catch(function(e) {
       // If we don't have any error that means that action was rejected
@@ -862,7 +862,7 @@ var ThreadUI = global.ThreadUI = {
       return Promise.resolve();
     }
 
-    this._onNavigatingBack().then(function() {
+    return this._onNavigatingBack().then(function() {
       this.cleanFields(true);
       window.location.hash = '#thread-list';
     }.bind(this)).catch(function(e) {

@@ -1,9 +1,9 @@
 /*global mocha, MocksHelper, MockAttachment, MockL10n, loadBodyHTML, ThreadUI,
          MockNavigatormozMobileMessage, Contacts, Compose, MockErrorDialog,
          Template, MockSMIL, Utils, MessageManager, LinkActionHandler,
-         LinkHelper, Attachment, MockContact, MockOptionMenu, MockPromise,
+         LinkHelper, Attachment, MockContact, MockOptionMenu,
          MockActivityPicker, Threads, Settings, MockMessages, MockUtils,
-         MockContacts, ActivityHandler, Recipients, MockMozActivity, MochaTask,
+         MockContacts, ActivityHandler, Recipients, MockMozActivity,
          ThreadListUI, ContactRenderer, UIEvent, Drafts, OptionMenu,
          ActivityPicker, KeyEvent, MockNavigatorSettings, MockContactRenderer,
          Draft, ErrorDialog, MockStickyHeader, MultiSimActionButton,
@@ -27,7 +27,6 @@ require('/js/thread_list_ui.js');
 require('/js/utils.js');
 
 require('/test/unit/mock_time_headers.js');
-require('/test/unit/mock_promise.js');
 require('/test/unit/mock_link_action_handler.js');
 require('/test/unit/mock_attachment.js');
 require('/test/unit/mock_attachment_menu.js');
@@ -88,8 +87,7 @@ var mocksHelperForThreadUI = new MocksHelper([
   'StickyHeader',
   'MultiSimActionButton',
   'Audio',
-  'LazyLoader',
-  'Promise'
+  'LazyLoader'
 ]);
 
 mocksHelperForThreadUI.init();
@@ -4767,91 +4765,81 @@ suite('thread_ui.js >', function() {
         ThreadUI.draft = null;
       });
 
-      test('Displays OptionMenu prompt if recipients', function* () {
-        ThreadUI.back();
+      test('Displays OptionMenu prompt if recipients', function(done) {
+        ThreadUI.back().then(function() {
+          assert.isTrue(OptionMenu.calledOnce);
+          assert.isTrue(showCalled);
 
-        yield MockPromise.flush().then(MochaTask.next);
+          var items = OptionMenu.args[0][0].items;
 
-        assert.isTrue(OptionMenu.calledOnce);
-        assert.isTrue(showCalled);
-
-        var items = OptionMenu.args[0][0].items;
-
-        // Assert the correct menu items were displayed
-        assert.equal(items[0].l10nId, 'save-as-draft');
-        assert.equal(items[1].l10nId, 'discard-message');
-        assert.equal(items[2].l10nId, 'cancel');
+          // Assert the correct menu items were displayed
+          assert.equal(items[0].l10nId, 'save-as-draft');
+          assert.equal(items[1].l10nId, 'discard-message');
+          assert.equal(items[2].l10nId, 'cancel');
+        }).then(done, done);
       });
 
-      test('Displays OptionMenu prompt if recipients & content', function* () {
+      test('Displays OptionMenu prompt if recipients & content',
+      function(done) {
 
         Compose.append('foo');
 
-        ThreadUI.back();
+        ThreadUI.back().then(function() {
+          assert.isTrue(OptionMenu.calledOnce);
+          assert.isTrue(showCalled);
 
-        yield MockPromise.flush().then(MochaTask.next);
+          var items = OptionMenu.args[0][0].items;
 
-        assert.isTrue(OptionMenu.calledOnce);
-        assert.isTrue(showCalled);
-
-        var items = OptionMenu.args[0][0].items;
-
-        // Assert the correct menu items were displayed
-        assert.equal(items[0].l10nId, 'save-as-draft');
-        assert.equal(items[1].l10nId, 'discard-message');
-        assert.equal(items[2].l10nId, 'cancel');
+          // Assert the correct menu items were displayed
+          assert.equal(items[0].l10nId, 'save-as-draft');
+          assert.equal(items[1].l10nId, 'discard-message');
+          assert.equal(items[2].l10nId, 'cancel');
+        }).then(done, done);
       });
 
-      test('Displays OptionMenu prompt if content', function* () {
+      test('Displays OptionMenu prompt if content', function(done) {
         ThreadUI.recipients.remove('999');
         Compose.append('foo');
 
-        ThreadUI.back();
+        ThreadUI.back().then(function() {
+          assert.isTrue(OptionMenu.calledOnce);
+          assert.isTrue(showCalled);
 
-        yield MockPromise.flush().then(MochaTask.next);
+          var items = OptionMenu.args[0][0].items;
 
-        assert.isTrue(OptionMenu.calledOnce);
-        assert.isTrue(showCalled);
-
-        var items = OptionMenu.args[0][0].items;
-
-        // Assert the correct menu items were displayed
-        assert.equal(items[0].l10nId, 'save-as-draft');
-        assert.equal(items[1].l10nId, 'discard-message');
-        assert.equal(items[2].l10nId, 'cancel');
+          // Assert the correct menu items were displayed
+          assert.equal(items[0].l10nId, 'save-as-draft');
+          assert.equal(items[1].l10nId, 'discard-message');
+          assert.equal(items[2].l10nId, 'cancel');
+        }).then(done, done);
       });
 
       suite('OptionMenu operations', function() {
-        test('Save as Draft', function* () {
+        test('Save as Draft', function(done) {
           var spy = this.sinon.spy(ThreadUI, 'saveDraft');
           optionMenuTargetItemIndex = 0;
 
-          ThreadUI.back();
-
-          yield MockPromise.flush().then(MochaTask.next);
-
-          // These things will be true
-          assert.isTrue(spy.calledOnce);
-          assert.equal(window.location.hash, '#thread-list');
-          assert.equal(ThreadUI.recipients.length, 0);
-          assert.equal(Compose.getContent(), '');
+          ThreadUI.back().then(function() {
+            assert.isTrue(spy.calledOnce);
+            assert.equal(window.location.hash, '#thread-list');
+            assert.equal(ThreadUI.recipients.length, 0);
+            assert.equal(Compose.getContent(), '');
+          }).then(done, done);
         });
 
-        test('Discard', function* () {
+        test('Discard', function(done) {
           var spy = this.sinon.spy(ThreadListUI, 'removeThread');
           optionMenuTargetItemIndex = 1;
           ThreadUI.draft = new Draft({id: 3});
           ThreadUI.draft.isEdited = true;
 
-          ThreadUI.back();
-
-          yield MockPromise.flush().then(MochaTask.next);
-
-          assert.equal(window.location.hash, '#thread-list');
-          assert.equal(ThreadUI.recipients.length, 0);
-          assert.equal(Compose.getContent(), '');
-          assert.isTrue(spy.calledOnce);
-          assert.isNull(ThreadUI.draft);
+          ThreadUI.back().then(function() {
+            assert.equal(window.location.hash, '#thread-list');
+            assert.equal(ThreadUI.recipients.length, 0);
+            assert.equal(Compose.getContent(), '');
+            assert.isTrue(spy.calledOnce);
+            assert.isNull(ThreadUI.draft);
+          }).then(done, done);
         });
       });
 
@@ -4871,57 +4859,52 @@ suite('thread_ui.js >', function() {
             ThreadUI.draft.isEdited = true; // can't set this via options
           });
 
-          test('Prompts for replacement if recipients', function* () {
-            ThreadUI.back();
+          test('Prompts for replacement if recipients', function(done) {
+            ThreadUI.back().then(function() {
+              assert.isTrue(OptionMenu.calledOnce);
+              assert.isTrue(showCalled);
 
-            yield MockPromise.flush().then(MochaTask.next);
+              var items = OptionMenu.args[0][0].items;
 
-            assert.isTrue(OptionMenu.calledOnce);
-            assert.isTrue(showCalled);
-
-            var items = OptionMenu.args[0][0].items;
-
-            // Assert the correct menu items were displayed
-            assert.equal(items[0].l10nId, 'replace-draft');
-            assert.equal(items[1].l10nId, 'discard-message');
-            assert.equal(items[2].l10nId, 'cancel');
+              // Assert the correct menu items were displayed
+              assert.equal(items[0].l10nId, 'replace-draft');
+              assert.equal(items[1].l10nId, 'discard-message');
+              assert.equal(items[2].l10nId, 'cancel');
+            }).then(done, done);
           });
 
-          test('Prompts for replacement if recipients & content', function* () {
+          test('Prompts for replacement if recipients & content',
+          function(done) {
             Compose.append('foo');
 
-            ThreadUI.back();
+            ThreadUI.back().then(function() {
+              assert.isTrue(OptionMenu.calledOnce);
+              assert.isTrue(showCalled);
 
-            yield MockPromise.flush().then(MochaTask.next);
+              var items = OptionMenu.args[0][0].items;
 
-            assert.isTrue(OptionMenu.calledOnce);
-            assert.isTrue(showCalled);
-
-            var items = OptionMenu.args[0][0].items;
-
-            // Assert the correct menu items were displayed
-            assert.equal(items[0].l10nId, 'replace-draft');
-            assert.equal(items[1].l10nId, 'discard-message');
-            assert.equal(items[2].l10nId, 'cancel');
+              // Assert the correct menu items were displayed
+              assert.equal(items[0].l10nId, 'replace-draft');
+              assert.equal(items[1].l10nId, 'discard-message');
+              assert.equal(items[2].l10nId, 'cancel');
+            }).then(done, done);
           });
 
-          test('Prompts for replacement if content', function* () {
+          test('Prompts for replacement if content', function(done) {
             ThreadUI.recipients.remove('999');
             Compose.append('foo');
 
-            ThreadUI.back();
+            ThreadUI.back().then(function() {
+              assert.isTrue(OptionMenu.calledOnce);
+              assert.isTrue(showCalled);
 
-            yield MockPromise.flush().then(MochaTask.next);
+              var items = OptionMenu.args[0][0].items;
 
-            assert.isTrue(OptionMenu.calledOnce);
-            assert.isTrue(showCalled);
-
-            var items = OptionMenu.args[0][0].items;
-
-            // Assert the correct menu items were displayed
-            assert.equal(items[0].l10nId, 'replace-draft');
-            assert.equal(items[1].l10nId, 'discard-message');
-            assert.equal(items[2].l10nId, 'cancel');
+              // Assert the correct menu items were displayed
+              assert.equal(items[0].l10nId, 'replace-draft');
+              assert.equal(items[1].l10nId, 'discard-message');
+              assert.equal(items[2].l10nId, 'cancel');
+            }).then(done, done);
           });
         });
 
@@ -4931,59 +4914,47 @@ suite('thread_ui.js >', function() {
             ThreadUI.draft = {id: 55};
           });
 
-          test('No prompt for replacement if recipients', function* () {
+          test('No prompt for replacement if recipients', function(done) {
             ThreadUI.draft.isEdited = false;
 
-            ThreadUI.back();
-
-            yield MockPromise.flush().then(MochaTask.next);
-
-            assert.isFalse(OptionMenu.calledOnce);
-            assert.isFalse(showCalled);
+            ThreadUI.back().then(function() {
+              assert.isFalse(OptionMenu.calledOnce);
+              assert.isFalse(showCalled);
+            }).then(done, done);
           });
 
           test('No prompt for replacement if recipients & content',
-            function* () {
+            function(done) {
 
             Compose.append('foo');
             ThreadUI.draft.isEdited = false;
 
-            ThreadUI.back();
-
-             yield MockPromise.flush().then(MochaTask.next);
-
-            assert.isFalse(OptionMenu.calledOnce);
-            assert.isFalse(showCalled);
+            ThreadUI.back().then(function() {
+              assert.isFalse(OptionMenu.calledOnce);
+              assert.isFalse(showCalled);
+            }).then(done, done);
           });
 
-          test('No prompt for replacement if content', function* () {
+          test('No prompt for replacement if content', function(done) {
             ThreadUI.recipients.remove('999');
             Compose.append('foo');
             ThreadUI.draft.isEdited = false;
 
-            ThreadUI.back();
-
-             yield MockPromise.flush().then(MochaTask.next);
-
-            assert.isFalse(OptionMenu.calledOnce);
-            assert.isFalse(showCalled);
+            ThreadUI.back().then(function() {
+              assert.isFalse(OptionMenu.calledOnce);
+              assert.isFalse(showCalled);
+            }).then(done, done);
           });
         });
       });
     });
   });
   suite('Close button behaviour', function() {
-    test('Call ActivityHandler.leaveActivity', function* () {
+    test('Call ActivityHandler.leaveActivity', function(done) {
       this.sinon.stub(ActivityHandler, 'leaveActivity');
-      ThreadUI.close();
-
-      var rejections = yield MockPromise.flush().then(MochaTask.next);
-      assert.isTrue(
-        rejections.length === 0,
-        'Should not have any unhandled rejected promises'
-      );
-
-      sinon.assert.called(ActivityHandler.leaveActivity);
+      ThreadUI.close().then(function() {
+        sinon.assert.called(ActivityHandler.leaveActivity);
+      }).then(done, done);
     });
   });
 
