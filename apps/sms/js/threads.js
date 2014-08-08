@@ -4,6 +4,40 @@
   'use strict';
 
   var threads = new Map();
+  var threadsContainers = new Map();
+  var threadsContainerOrdered = [];
+
+  function ThreadContainer(opts) {
+    for (var key in opts) { // TODO use FIELDS parameter
+      this[key] = opts[key];
+    }
+  }
+
+  ThreadContainer.prototype = {
+
+  };
+
+  ThreadContainer.hasForThread = function(thread) {
+    var date = Utils.getDayDate(thread.timestamp); // TODO drafts
+
+    return threadsContainer.has(date);
+  };
+
+  ThreadContainer.createForThread = function(thread) {
+    // TODO assert thread instanceof Thread
+    var date = Utils.getDayDate(thread.timestamp); // TODO drafts
+    var container = new ThreadContainer({
+      date: date,
+      threads: [thread]
+    });
+
+    threadsContainers.set(date, container);
+    this.insertContainer(container);
+  }
+
+  ThreadContainer.insertContainer = function(container) {
+    
+  }
 
   function Thread(thread) {
     var length = Thread.FIELDS.length;
