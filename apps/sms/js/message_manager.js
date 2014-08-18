@@ -26,6 +26,8 @@ var MessageManager = {
     this._mozMobileMessage = navigator.mozMobileMessage ||
       window.DesktopMockNavigatormozMobileMessage;
 
+    this.cursor = this._mozMobileMessage.getThreads();
+
     this._mozMobileMessage.addEventListener(
       'received', this.onMessageReceived.bind(this)
     );
@@ -118,8 +120,11 @@ var MessageManager = {
     var each = options.each;
     var end = options.end;
     var done = options.done;
-    var cursor = null;
+    var cursor;
 
+    if (this.cursor) {
+      cursor = this.cursor;
+    } else {
     // WORKAROUND for bug 958738. We can remove 'try\catch' block once this bug
     // is resolved
     try {
@@ -130,6 +135,7 @@ var MessageManager = {
       done && done();
 
       return;
+    }
     }
 
     cursor.onsuccess = function onsuccess() {
