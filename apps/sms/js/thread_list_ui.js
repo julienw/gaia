@@ -27,6 +27,8 @@ var ThreadListUI = {
   inEditMode: false,
 
   initDefer: Utils.Promise.defer(),
+  firstPanelDefer: Utils.Promise.defer(),
+  threadsRenderedDefer: Utils.Promise.defer(),
 
   init: function thlui_init() {
     this.tmpl = {
@@ -506,6 +508,14 @@ var ThreadListUI = {
     this.sticky.refresh();
   },
 
+  whenFirstPanelDone: function() {
+    return this.firstPanelDefer.promise;
+  },
+
+  whenThreadsRendered: function() {
+    return this.threadsRenderedDefer.promise;
+  },
+
   renderThreads: function thlui_renderThreads(firstViewDone, allDone) {
     var hasThreads = false;
     var firstPanelCount = 9; // counted on a Peak
@@ -535,7 +545,7 @@ var ThreadListUI = {
       if (--firstPanelCount === 0) {
         // dispatch visually-complete and content-interactive when rendered
         // threads could fill up the top of the visiable area
-        firstViewDone();
+        this.firstPanelDefer.resolve();
         window.dispatchEvent(new CustomEvent('moz-app-visually-complete'));
       }
       });
@@ -551,7 +561,7 @@ var ThreadListUI = {
       if (firstPanelCount > 0) {
         // dispatch visually-complete and content-interactive when rendering
         // ended but threads could not fill up the top of the visiable area
-        firstViewDone();
+        this.firstPanelDefer.resolve();
         window.dispatchEvent(new CustomEvent('moz-app-visually-complete'));
       }
     }
@@ -559,7 +569,7 @@ var ThreadListUI = {
     var renderingOptions = {
       each: onRenderThread.bind(this),
       end: onThreadsRendered.bind(this),
-      done: allDone
+      done: this.threadsRenderedDefer.resolve
     };
 
     MessageManager.getThreads(renderingOptions);

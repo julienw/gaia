@@ -119,6 +119,7 @@ var Startup = {
   _initUIApp: function() {
     Navigation.init();
     ThreadListUI.init();
+    ThreadListUI.whenFirstPanelDone().then(this._lazyLoadInit.bind(this));
 
     // dispatch chrome-interactive when thread list related modules
     // initialized
