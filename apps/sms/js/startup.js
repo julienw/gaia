@@ -5,7 +5,7 @@
 
 /*global Utils, ActivityHandler, ThreadUI, ThreadListUI, MessageManager,
          Settings, LazyLoader, TimeHeaders, Information, SilentSms,
-         PerformanceTestingHelper, App, Navigation, EventDispatcher */
+         PerformanceTestingHelper, Navigation, EventDispatcher */
 
 navigator.mozL10n.ready(function localized() {
   // This will be called during startup, and any time the languange is changed
@@ -119,10 +119,6 @@ var Startup = {
   _initUIApp: function() {
     Navigation.init();
     ThreadListUI.init();
-    ThreadListUI.renderThreads(this._lazyLoadInit.bind(this), function() {
-      window.dispatchEvent(new CustomEvent('moz-app-loaded'));
-      App.setReady();
-    });
 
     // dispatch chrome-interactive when thread list related modules
     // initialized
@@ -144,7 +140,7 @@ var Startup = {
         });
         return;
       }
-      MessageManager.init(initUIApp);
+      initUIApp();
     });
   }
 };

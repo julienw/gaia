@@ -18,6 +18,15 @@
     // TODO: For mms resizing
   };
 
+
+  function extend(target, source) {
+    for (var key in source) {
+      if (source.hasOwnProperty(key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
   var Utils = {
     date: {
       shared: new Date(),
@@ -143,13 +152,7 @@
       return details;
     },
 
-    extend: function ut_extend(target, source) {
-      for (var key in source) {
-        if (source.hasOwnProperty(key)) {
-          target[key] = source[key];
-        }
-      }
-    },
+    extend: extend,
 
     /**
      * Based on input number tries to extract more phone details like phone
@@ -713,30 +716,9 @@
 
         timeout = setTimeout(executeLater, waitTime);
       };
-    },
-
-    /**
-     * Promise related utilities
-     */
-    Promise: {
-      /**
-       * Returns object that contains promise and related resolve\reject methods
-       * to avoid wrapping long or complex code into single Promise constructor.
-       * @returns {{promise: Promise, resolve: function, reject: function}}
-       */
-      defer: function() {
-        var deferred = {};
-
-        deferred.promise = new Promise(function(resolve, reject) {
-          deferred.resolve = resolve;
-          deferred.reject = reject;
-        });
-
-        return deferred;
-      }
     }
   };
 
-  exports.Utils = Utils;
+  extend(exports.Utils, Utils);
 
 }(this));

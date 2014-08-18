@@ -26,6 +26,8 @@ var ThreadListUI = {
   // Set to |true| when in edit mode
   inEditMode: false,
 
+  initDefer: Utils.Promise.defer(),
+
   init: function thlui_init() {
     this.tmpl = {
       thread: Template('messages-thread-tmpl')
@@ -89,6 +91,8 @@ var ThreadListUI = {
     MessageManager.on('message-sending', this.onMessageSending.bind(this));
     MessageManager.on('message-received', this.onMessageReceived.bind(this));
     MessageManager.on('threads-deleted', this.onThreadsDeleted.bind(this));
+
+    this.initDefer.resolve();
   },
 
   beforeLeave: function thlui_beforeLeave() {
@@ -503,14 +507,14 @@ var ThreadListUI = {
   },
 
   renderThreads: function thlui_renderThreads(firstViewDone, allDone) {
-    PerformanceTestingHelper.dispatch('will-render-threads');
-
     var hasThreads = false;
     var firstPanelCount = 9; // counted on a Peak
 
-    this.prepareRendering();
+    var initPromise = this.initDefer.promise;
+    initPromise.then(this.prepareRendering.bind(this));
 
     function onRenderThread(thread) {
+      initPromise.then(() => {
       /* jshint validthis: true */
       // Register all threads to the Threads object.
       Threads.set(thread.id, thread);
@@ -534,6 +538,7 @@ var ThreadListUI = {
         firstViewDone();
         window.dispatchEvent(new CustomEvent('moz-app-visually-complete'));
       }
+      });
     }
 
     function onThreadsRendered() {
