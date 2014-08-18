@@ -126,6 +126,8 @@ var Startup = {
   },
 
   init: function() {
+    MessageManager.init();
+    ThreadListUI.renderThreads();
     var initUIApp = this._initUIApp.bind(this);
     window.addEventListener('DOMContentLoaded', function() {
       window.dispatchEvent(new CustomEvent('moz-chrome-dom-loaded'));
