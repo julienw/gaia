@@ -2678,7 +2678,7 @@ var ThreadUI = {
     //
     if (!header && (number || email)) {
       header = document.createElement('bdi');
-      header.className = 'unknown-contact';
+      header.className = 'unknown-contact-header';
       header.textContent = number || email;
     }
 
