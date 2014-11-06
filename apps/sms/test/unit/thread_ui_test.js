@@ -3986,7 +3986,9 @@ suite('thread_ui.js >', function() {
 
             assert.equal(calls.length, 1);
             assert.equal(calls[0].header.textContent, '777');
-            assert.ok(calls[0].header.classList.contains('unknown-contact-header'));
+            assert.ok(
+              calls[0].header.classList.contains('unknown-contact-header')
+            );
             assert.equal(calls[0].header.tagName, 'BDI');
             assert.equal(calls[0].items.length, 3);
             assert.equal(typeof calls[0].complete, 'function');
@@ -4037,7 +4039,9 @@ suite('thread_ui.js >', function() {
 
             assert.equal(calls.length, 1);
             assert.equal(calls[0].header.textContent, 'a@b');
-            assert.ok(calls[0].header.classList.contains('unknown-contact-header'));
+            assert.ok(
+              calls[0].header.classList.contains('unknown-contact-header')
+            );
             assert.equal(calls[0].header.tagName, 'BDI');
             assert.equal(calls[0].items.length, 5);
             assert.equal(typeof calls[0].complete, 'function');
