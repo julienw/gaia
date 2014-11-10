@@ -1,6 +1,7 @@
+console.time('gaia-header-global');
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.GaiaHeader=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-(function(define){'use strict';define(function(require,exports,module){
-
+console.time('gaia-icons');
+  (function(define){'use strict';define(function(require,exports,module){
 /**
  * Exports
  */
@@ -30,7 +31,11 @@ define:typeof module=='object'?function(c){c(require,exports,module);}:
 function(c){var m={exports:{}},r=function(n){return w[n];};
 w[n]=c(r,m.exports,m)||m.exports;};})('gaia-icons',this));
 
+console.timeEnd('gaia-icons');
+
 },{}],2:[function(require,module,exports){
+
+  console.time('font-fit');
 (function(define){'use strict';define(function(require,exports,module){
 /*globals define,exports,module,require*/
 
@@ -73,6 +78,7 @@ w[n]=c(r,m.exports,m)||m.exports;};})('gaia-icons',this));
 
       // Cache the element style properties to avoid reflows.
       var style = this._getStyleProperties(heading);
+      console.log('>>> offsetLeft is', style.offsetLeft, 'for heading', heading.id);
 
       // If the document is inside a hidden iframe
       // `window.getComputedStyle()` returns null,
@@ -369,7 +375,10 @@ define:typeof module=='object'?function(c){c(require,exports,module);}:
 function(c){var m={exports:{}},r=function(n){return w[n];};
 w[n]=c(r,m.exports,m)||m.exports;};})('./lib/font-fit',this));
 
+console.timeEnd('font-fit');
 },{}],3:[function(require,module,exports){
+
+  console.time('gaia-header');
 (function(define){'use strict';define(function(require,exports,module){
 /*globals define*//*jshint node:true*/
 
@@ -377,8 +386,10 @@ w[n]=c(r,m.exports,m)||m.exports;};})('./lib/font-fit',this));
  * Dependencies
  */
 
+console.time('require');
 var loadGaiaIcons = require('gaia-icons');
 var fontFit = require('./lib/font-fit');
+console.timeEnd('require');
 
 /**
  * Locals
@@ -414,6 +425,7 @@ var actionTypes = {
  * @private
  */
 proto.createdCallback = function() {
+  console.time('createdCallback');
   var shadow = this.createShadowRoot();
   var tmpl = template.content.cloneNode(true);
 
@@ -430,10 +442,13 @@ proto.createdCallback = function() {
   this.configureActionButton();
   this.setupInteractionListeners();
   shadow.appendChild(tmpl);
+  console.time('styleHack');
   this.styleHack();
+  console.timeEnd('styleHack');
 
   // Font fit must be run only once the element is styled
   this.addEventListener('styled', this.runFontFit.bind(this));
+  console.timeEnd('createdCallback');
 };
 
 /**
@@ -456,7 +471,9 @@ proto.styleHack = function() {
   var style = document.createElement('style');
   var self = this;
 
+  console.time('visibility');
   this.style.visibility = 'hidden';
+  console.timeEnd('visibility');
   style.innerHTML = '@import url(' + base + 'style.css);';
   style.setAttribute('scoped', '');
   this.classList.add('-content');
@@ -579,6 +596,7 @@ proto.setupInteractionListeners = function() {
 // things getting out of sync. This is a short-term
 // hack until we can import entire custom-elements
 // using HTML Imports (bug 877072).
+console.time('template');
 var template = document.createElement('template');
 template.innerHTML = [
   '<div class="inner">',
@@ -588,6 +606,7 @@ template.innerHTML = [
     '<content select="h1,h2,h3,h4,a,button"></content>',
   '</div>'
 ].join('');
+console.timeEnd('template');
 
 /**
  * Adds a '.active' helper class to the given
@@ -613,6 +632,7 @@ template.innerHTML = [
  * @param {Object} options
  * @private
  */
+console.time('sticky');
 var stickyActive = (function() {
   var noop = function() {};
   var pointer = [
@@ -646,13 +666,18 @@ var stickyActive = (function() {
   exports.class = 'active';
   return exports;
 })();
+console.timeEnd('sticky');
 
 // Header depends on gaia-icons
+console.time('loadicons');
 loadGaiaIcons(baseComponents);
+console.timeEnd('loadicons');
 
 // Register and return the constructor
 // and expose `protoype` (bug 1048339)
+console.time('register');
 module.exports = document.registerElement('gaia-header', { prototype: proto });
+console.timeEnd('register');
 module.exports._prototype = proto;
 
 });})((function(n,w){'use strict';return typeof define=='function'&&define.amd?
@@ -660,5 +685,7 @@ define:typeof module=='object'?function(c){c(require,exports,module);}:
 function(c){var m={exports:{}},r=function(n){return w[n];};
 w[n]=c(r,m.exports,m)||m.exports;};})('gaia-header',this));
 
+console.timeEnd('gaia-header');
 },{"./lib/font-fit":2,"gaia-icons":1}]},{},[3])(3)
 });
+console.timeEnd('gaia-header-gloval');
