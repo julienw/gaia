@@ -124,7 +124,9 @@
       this.resetCentering(header);
 
       // Cache the element style properites to avoid reflows.
+      console.time('getStyleProperties');
       var style = this.getStyleProperties(header);
+      console.timeEnd('getStyleProperties');
 
       // Perform auto-resize and center.
       style.textWidth = this.autoResizeElement(header, style);
@@ -142,10 +144,10 @@
       for (var i = 0; i < headers.length; i++) {
         // On some apps wrapping inside a requestAnimationFrame reduces the
         // number of calls to _reformatHeaderText().
-        window.requestAnimationFrame(function(header) {
+        window.requestAnimationFrame(function(header, i) {
           this._reformatHeaderText(header);
           this._observeHeaderChanges(header);
-        }.bind(this, headers[i]));
+        }.bind(this, headers[i], i));
       }
     },
 
@@ -249,8 +251,12 @@
      * @return {Object} A dictionary containing element's style properties.
      */
     getStyleProperties: function(element) {
+      console.time('getComputedStyle');
       var style = window.getComputedStyle(element);
+      console.timeEnd('getComputedStyle');
+      console.time('getContentWidth');
       var contentWidth = this.getContentWidth(style);
+      console.timeEnd('getContentWidth');
       if (isNaN(contentWidth)) {
         contentWidth = 0;
       }
