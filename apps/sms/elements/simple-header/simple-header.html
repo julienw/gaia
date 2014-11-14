@@ -1,0 +1,16 @@
+<link rel="stylesheet" type="text/css" href="/shared/elements/gaia-icons/gaia-icons.css">
+
+<script defer src="font-fit.js"></script>
+<script defer src="script.js"></script>
+
+<template id='simple-header-template'>
+  <style>
+    @import url(elements/simple-header/simple-header.css);
+  </style>
+  <div class="inner">
+    <button class="action-button">
+      <content select=".l10n-action"></content>
+    </button>
+    <content select="h1,h2,h3,h4,a,button"></content>
+  </div>
+</template>
