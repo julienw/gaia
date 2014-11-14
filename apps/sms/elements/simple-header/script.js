@@ -33,8 +33,18 @@
       var template = curDoc.getElementById('simple-header-template');
       // Copy the <template>
       var clone = document.importNode(template.content, true);
+
+      this.els = {
+        actionButton: clone.querySelector('.action-button'),
+        heading: this.querySelector('h1,h2,h3,h4'),
+        inner: clone.querySelector('.inner')
+      };
+
+      this.configureActionButton();
+
       // Append template to the Shadow Root
       root.appendChild(clone);
+      this.shadowStyleHack();
     },
 
     attributeChangedCallback: function(name) {
@@ -51,7 +61,7 @@
     attachedCallback: function() {
       console.log('attached callback');
       KNOWN_ATTRIBUTES.forEach((name) => this._updateAttribute(name));
-      this._heading = this.querySelector('h1, h2, h3, h4, h5, h6');
+      this.renderSoon();
     },
 
     _updateAttribute: function(name) {
@@ -74,6 +84,26 @@
       }
     },
 
+    /**
+     * The Gecko platform doesn't yet have
+     * `::content` or `:host`, selectors,
+     * without these we are unable to style
+     * user-content in the light-dom from
+     * within our shadow-dom style-sheet.
+     *
+     * To workaround this, we clone the <style>
+     * node into the root of the component,
+     * so our selectors are able to target
+     * light-dom content.
+     *
+     * @private
+     */
+    shadowStyleHack: function() {
+      var style = this.shadowRoot.querySelector('style').cloneNode(true);
+      //this.classList.add('-content', '-host');
+      style.setAttribute('scoped', '');
+      this.appendChild(style);
+    },
 
     /**
      * Configure the action button based
@@ -90,6 +120,9 @@
       this.els.actionButton.setAttribute('icon', type);
       this.els.inner.classList.toggle('supported-action', supported);
       if (supported) { this.els.actionButton.classList.add('icon-' + type); }
+      this.els.actionButton.addEventListener(
+        'click', () => this.onActionButtonClick()
+      );
     },
 
     /**
@@ -111,7 +144,7 @@
      * @param  {Event} e
      * @private
      */
-    onActionButtonClick: function(e) {
+    onActionButtonClick: function() {
       var config = { detail: { type: this.getAttribute('action') } };
       var actionEvent = new CustomEvent('action', config);
       setTimeout(this.dispatchEvent.bind(this, actionEvent));
