@@ -7,10 +7,10 @@
   padding: 0 1.5rem;
   margin: 0;
   list-style: none;
+  display: flex;
 }
 
 #quick-settings ul {
-  float: left;
   width: 20%;
   padding: 0;
   margin: 0;

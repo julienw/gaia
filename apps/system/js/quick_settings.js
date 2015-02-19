@@ -1,5 +1,5 @@
 /* jshint loopfunc: true */
-/* global SettingsHelper, SettingsListener, applications,
+/* global SettingsHelper, SettingsListener, addOnManager, applications,
           UtilityTray, MozActivity */
 
 'use strict';
@@ -88,6 +88,35 @@
       this.monitorWifiChange();
       this.monitorGeoChange();
       this.monitorAirplaneModeChange();
+
+      addOnManager.contribute(
+        'QuickSettings',
+        ['onReady', 'onClick'],
+        this.onAddOnContribute.bind(this)
+      );
+    },
+
+    onAddOnContribute: function(actions) {
+      if (typeof actions.onReady !== 'function') {
+        console.error('No onReady handler');
+        return;
+      }
+
+      actions.onReady((attributes) => {
+        var icon = document.createElement('ul');
+        var link = document.createElement('a');
+        link.href='#';
+        link.className = 'icon bb-button';
+        link.id = attributes.id;
+        if (attributes.icon) {
+          link.dataset.icon = attributes.icon;
+        }
+        link.dataset.enabled = 'false';
+        link.role = 'button';
+
+        icon.appendChild(link);
+        this.overlay.appendChild(icon);
+      });
     },
 
     /**
