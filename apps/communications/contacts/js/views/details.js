@@ -311,10 +311,14 @@ contacts.Details = (function() {
     var favorite = isFavorite(contact);
     toggleFavoriteMessage(favorite);
     if (contact.category && contact.category.indexOf('favorite') != -1) {
-      detailsName.classList.add('favorite');
+      header.classList.add('favorite');
+      header.setAttribute('title-end', 80);
     } else {
-      detailsName.classList.remove('favorite');
+      header.classList.remove('favorite');
+      header.setAttribute('title-end', 50);
     }
+
+    header.removeAttribute('no-font-fit');
   };
 
   var isFavorite = function isFavorite(contact) {

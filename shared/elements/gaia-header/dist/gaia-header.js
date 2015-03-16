@@ -7,7 +7,7 @@
  *
  * @return {Function}
  */
-var debug = 0 ? console.log.bind(console) : function(){};
+var debug = 1 ? console.log.bind(console) : function(){};
 
 /**
  * Global canvas cache.
@@ -482,7 +482,7 @@ require('gaia-icons');
  *
  * @type {Function}
  */
-var debug = 0 ? console.log.bind(console) : function() {};
+var debug = 1 ? console.log.bind(console) : function() {};
 
 /**
  * Supported action types
