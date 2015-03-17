@@ -435,6 +435,7 @@
 
     window.onload = () => {
       utils.PerformanceHelper.visuallyComplete();
+      Array.from(document.querySelectorAll('[no-font-fit]')).forEach(elt => elt.removeAttribute('no-font-fit'));
       loadScripts();
     };
   });
