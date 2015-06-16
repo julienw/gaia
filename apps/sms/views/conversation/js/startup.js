@@ -71,19 +71,15 @@
 
   exports.Startup = {
     init() {
-      MessageManager.init();
-      Navigation.init();
-      ConversationView.init();
-
-      ConversationView.once('visually-loaded', () => {
-        initLazyDependencies();
-        initHeaders();
-      });
-
       initShims().then(() => {
-        // Temporary workaround, navigation part will be revised in bug 1162030.
-        Navigation.defaultPanel = Navigation.getPanelName() || DEFAULT_PANEL;
-        Navigation.toDefaultPanel(Utils.params(exports.location.hash));
+        MessageManager.init();
+        Navigation.init();
+        ConversationView.init();
+
+        ConversationView.once('visually-loaded', () => {
+          initLazyDependencies();
+          initHeaders();
+        });
       });
     }
   };

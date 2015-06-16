@@ -473,6 +473,19 @@
       });
       return parsed;
     },
+    url(base, params) {
+      if (base.indexOf('?') === -1) {
+        base += '?';
+      } else {
+        base += '&';
+      }
+
+      for (var key in params) {
+        base += encodeURIComponent(`${key}=${params[key]}&`);
+      }
+
+      return base;
+    },
     basicContact: function(number, records) {
       var record;
       if (Array.isArray(records)) {

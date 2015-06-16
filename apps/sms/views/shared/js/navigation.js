@@ -281,7 +281,7 @@
       } else {
         // document change
         return beforeLeavePromise.then(
-          () => setLocation(nextLocation + hash)
+          () => setLocation('/' + nextLocation + hash)
         );
       }
     },
