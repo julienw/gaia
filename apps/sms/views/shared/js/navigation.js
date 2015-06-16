@@ -1,361 +1,308 @@
-/* global Promise,
-      EventDispatcher
-*/
+/*global
+  Utils
+ */
+(function(exports) {
+  'use strict';
 
-/* exported Navigation */
+  const NGA_VIEWS = Object.freeze([
+    Object.freeze({
+      name: 'thread',
+      url: 'views/conversation/index.html',
+      view: 'ConversationView',
+      previous: 'thread-list',
+      alsoContains: ['report-view', 'composer', 'group-view']
+    }),
+    Object.freeze({
+      name: 'thread-list',
+      url: 'views/inbox/index.html',
+      view: 'InboxView'
+    }),
+    Object.freeze({
+      name: 'report-view',
+      view: 'ReportView',
+      previous: 'thread',
+      partOf: 'thread'
+    }),
+    Object.freeze({
+      name: 'composer',
+      view: 'ConversationView',
+      previous: 'thread-list',
+      partOf: 'thread'
+    }),
+    Object.freeze({
+      name: 'group-view',
+      view: 'GroupView',
+      previous: 'thread',
+      partOf: 'thread'
+    })
+  ]);
 
-'use strict';
+  const OA_VIEWS = Object.freeze([
+    Object.freeze({
+      name: 'thread-list',
+      url: 'index.html',
+      view: 'InboxView',
+      alsoContains: ['thread', 'composer', 'group-view', 'report-view']
+    }),
+    Object.freeze({
+      name: 'thread',
+      view: 'ConversationView',
+      previous: 'thread-list',
+      partOf: 'thread-list'
+    }),
+    Object.freeze({
+      name: 'composer',
+      view: 'ConversationView',
+      previous: 'thread-list',
+      partOf: 'thread-list'
+    }),
+    Object.freeze({
+      name: 'group-view',
+      view: 'GroupView',
+      previous: 'thread',
+      partOf: 'thread-list'
+    }),
+    Object.freeze({
+      name: 'report-view',
+      view: 'ReportView',
+      previous: 'thread',
+      partOf: 'thread-list'
+    })
+  ]);
 
-(function(window) {
+  const VIEWS = usingOldArchitecture() ? OA_VIEWS : NGA_VIEWS;
 
-// This function is used as a rejection handler, to swallow errors and log them
-function catchError(e) {
-  if (e) {
-    console.error(
-      'Navigation.toPanel: got an exception: (%s) %s',
-      e, e.stack && e.stack.replace(/\n/g, '|')
-    );
-  } else {
-    console.log('Navigation.toPanel: got a rejected promise');
+  var currentView;
+
+  function setLocation(url) {
+    window.location.assign(url);
   }
-}
 
-var currentPanel;
-var queuedPanel;
-
-function nextQueuedPanel() {
-  if (queuedPanel) {
-    var next = queuedPanel;
-    queuedPanel = null;
-    Navigation.toPanel(next.panel, next.args)
-      .then(next.defer.resolve, next.defer.reject);
+  function usingOldArchitecture() {
+    var pathname = window.location.pathname;
+    return (pathname === '/' || pathname === '/index.html');
   }
-}
 
-var Navigation = {
-  isReady: false,
-  panelObjects: window,
-
-  defaultPanel: 'thread-list',
-
-  panels: {
-    'thread': {
-      behaviour: 'ConversationView',
-      wrapperPosition: 'left',
-      container: 'thread-messages'
-    },
-    'thread-list': {
-      behaviour: 'InboxView',
-      wrapperPosition: 'right',
-      container: 'thread-list'
-    },
-    'composer': {
-      behaviour: 'ConversationView',
-      wrapperPosition: 'left',
-      container: 'thread-messages'
-    },
-    'group-view': {
-      behaviour: 'GroupView',
-      wrapperPosition: 'left',
-      container: 'information-participants'
-    },
-    'report-view': {
-      behaviour: 'ReportView',
-      wrapperPosition: 'left',
-      container: 'information-report'
-    }
-  },
-
-  init: function n_init() {
-    this.mainWrapper = document.getElementById('main-wrapper');
-    this.transitionPromise = null;
-
-    currentPanel = null;
-  },
-
-  setReady: function n_setReady() {
-    this.isReady = true;
-    nextQueuedPanel();
-  },
-
-  /**
-   * Returns a boolean.
-   *
-   * Called with a first argument that is not an object, it returns whether the
-   * current panel is this first argument.
-   *
-   * Called with 2 arguments, the first one is not an object, the second one
-   * must be an object. It returns whether the current panel is the first
-   * argument, and for each property of the second argument, whether its value
-   * is equal to the value for the current panel's arguments' same property.
-   */
-  isCurrentPanel: function n_isCurrentPanel(panel, args) {
-    if (!currentPanel || !panel) {
-      return false;
+  function findViewFromHash(hash) {
+    if (!hash) {
+      return null;
     }
 
-    if (panel !== currentPanel.panel) {
-      return false;
+    var index = hash.indexOf('/');
+    if (index != -1) {
+      hash = hash.slice(index + 1);
     }
 
-    if (!args) {
-      return true;
-    }
-
-    var currentArgs = currentPanel.args || {};
-
-    for (var arg in args) {
-      if (args[arg] != currentArgs[arg]) {
-        return false;
-      }
-    }
-
-    return true;
-  },
-
-  /**
-   * Checks if current location.hash corresponds to default panel.
-   * @returns {boolean} True if current location.hash corresponds to default
-   * panel.
-   */
-  isDefaultPanel: function n_isDefaultPanel() {
-    var panelName = this.getPanelName();
-
-    return !panelName || panelName === this.defaultPanel;
-  },
-
-  /**
-   * Ensures that current panel is correctly set, if no current panel set and
-   * we're not in the process of transitioning then set default panel as current
-   * one.
-   */
-  ensureCurrentPanel: function() {
-    if (this.transitionPromise) {
-      return this.transitionPromise;
-    }
-
-    if (!currentPanel) {
-      return this.toPanel(this.defaultPanel);
-    }
-
-    return Promise.resolve();
-  },
-
-  /**
-   * Lifecycle methods are called in this order:
-   * - previousPanel.beforeLeave
-   * - nextPanel.beforeEnter
-   * - previousPanel.afterLeave
-   * - nextPanel.afterEnter
-   *
-   * The panels are slid between beforeEnter and afterLeave.
-   *
-   * Therefore it is expected that:
-   * - beforeLeave does not change any state but merely checks whether the
-   *   transition can take place
-   * - beforeEnter checks whether the transition can take place and make any
-   *   visual change that should be made before the transition
-   * - afterLeave cleans up the panel, reclaim memory
-   * - afterEnter does left-over actions
-   *
-   * beforeLeave and beforeEnter can :
-   * - throw or return a rejected Promise to stop the transition.
-   * - finish normally or return a resolved Promise to continue the transition
-   *
-   * However, afterLeave and afterEnter should only finish normally or return a
-   * resolved Promise. Otherwise, the errors will be logged but the transition
-   * will finish.
-   *
-   * toPanel itself returns a Promise that will be resolved if the transition
-   * happened and rejected otherwise.
-   */
-  toPanel: function n_toPanel(panel, args) {
-    if (!(panel in this.panels)) {
-      return Promise.reject(new Error('Panel ' + panel + ' is unknown.'));
-    }
-
-    // put the request to a queue when:
-    //   - Panel is still transitioning
-    //   - trying to navigate when the app is not loaded completely
-    var notReadyNavigate = (panel !== this.defaultPanel && !this.isReady);
-    if (this.transitionPromise || notReadyNavigate) {
-      queuedPanel = {
-        panel: panel,
-        args: args
-      };
-
-      return new Promise(function(resolve, reject) {
-        queuedPanel.defer = {
-          resolve: resolve,
-          reject: reject
-        };
-      });
-    }
-
-    // this checks both panel and args
-    if (this.isCurrentPanel(panel, args)) {
-      return Promise.resolve();
-    }
-
-    var transitionArgs = args || {};
-
-    document.activeElement.blur();
-
-    transitionArgs.meta = {
-      next: {
-        panel: panel,
-        args: args
-      },
-      prev: currentPanel
-    };
-
-    var nextPanelInfo = this.panels[panel];
-    var nextPanelContainer = document.getElementById(nextPanelInfo.container);
-    var nextPanelObject = this.panelObjects[nextPanelInfo.behaviour];
-
-    if (!nextPanelObject) {
-      var error = new Error(
-        'Navigation.toPanel: no behaviour found for panel ' + panel
-      );
-      return Promise.reject(error);
-    }
-
-    var currentPanelObject;
-    var currentPanelContainer;
-    if (currentPanel) {
-      var currentPanelInfo = this.panels[currentPanel.panel];
-      currentPanelObject = this.panelObjects[currentPanelInfo.behaviour];
-      currentPanelContainer = document.getElementById(
-        currentPanelInfo.container);
-    }
-
-    var promise = Promise.resolve();
-
-    // beforeLeave and beforeEnter can return a rejected promise to prevent
-    // sliding. An exception is never expected though.
-    if (currentPanelObject && currentPanelObject.beforeLeave) {
-      promise = promise.then(
-        currentPanelObject.beforeLeave.bind(currentPanelObject, transitionArgs)
-      );
-    }
-
-    if (nextPanelObject.beforeEnter) {
-      promise = promise.then(
-        nextPanelObject.beforeEnter.bind(nextPanelObject, transitionArgs)
-      );
-    }
-
-    promise = promise.then(function resetPanel() {
-      // While we're sliding, we aren't in any panel
-      currentPanel = null;
-    });
-
-    // sliding
-    promise = promise.then(
-      this.slide.bind(this, nextPanelInfo.wrapperPosition)
-    ).then(function changePanel() {
-      currentPanel = {
-        panel: panel,
-        args: args
-      };
-    });
-
-    // afterLeave and afterEnter should not trigger errors
-    promise = promise.then(function() {
-      var promise = Promise.resolve();
-
-      if (currentPanelObject && currentPanelObject.afterLeave) {
-        promise = promise.then(
-          currentPanelObject.afterLeave.bind(currentPanelObject, transitionArgs)
-        ).catch(catchError);
-      }
-
-      if (nextPanelObject.afterEnter) {
-        promise = promise.then(
-          nextPanelObject.afterEnter.bind(nextPanelObject, transitionArgs)
-        ).catch(catchError);
-      }
-
-      return promise;
-    });
-
-    promise = promise.then(
-      function resolved() {
-        this.transitionPromise = null;
-        if (nextPanelContainer === currentPanelContainer) {
-          return;
-        }
-        nextPanelContainer.setAttribute('aria-hidden', false);
-        if (currentPanelContainer) {
-          currentPanelContainer.setAttribute('aria-hidden', true);
-        }
-      }.bind(this),
-      function rejected(e) {
-        catchError(e);
-        this.transitionPromise = null;
-        return Promise.reject(new Error('Error while transitioning'));
-      }.bind(this)
-    );
-
-    promise.
-      then(() => this.emit('navigated', { panel: panel, args: args })).
-      then(nextQueuedPanel, nextQueuedPanel);
-
-    return (this.transitionPromise = promise);
-  },
-
-  /**
-   * Navigates to default panel using specified arguments.
-   * @param {*?} args Any arguments that will be passed into default panel
-   * lifecycle methods.
-   * @returns {Promise} Promise that will be resolved once navigation to default
-   * panel is completed.
-   */
-  toDefaultPanel: function n_toDefaultPanel(args) {
-    return this.toPanel(this.defaultPanel, args);
-  },
-
-  getPanelName: function n_getPanelName() {
-    var hash = window.location.hash;
-    if (hash.length && hash.startsWith('#')) {
-      hash = hash.slice(1);
-    }
-
-    var index;
-    if ((index = hash.indexOf('&')) !== -1) {
+    index = hash.indexOf('?');
+    if (index !== -1) {
       hash = hash.slice(0, index);
     }
 
-    return hash;
-  },
+    return findViewFromName(hash);
+  }
 
-  slide: function n_slide(position) {
-    var wrapper = this.mainWrapper;
+  function findViewFromLocation(location) {
+    var pathName = location.pathname;
 
-    if (wrapper.dataset.position === position) {
-      return Promise.resolve();
+    var viewFromHash = findViewFromHash(location.hash);
+    var viewFromPath = VIEWS.find(
+      (object) => pathName.endsWith('/' + object.url)
+    ) || null;
+
+    if (viewFromHash && viewFromHash.partOf &&
+        viewFromHash.partOf !== viewFromPath.name) {
+      console.error(
+        'The view', viewFromHash.name,
+        'found from the hash', location.hash,
+        'is not part of view', viewFromPath.name
+      );
+      viewFromHash = null;
     }
 
-    wrapper.dataset.position = position;
-
-    return new Promise(function(resolve, reject) {
-      // We have 2 panels, so we get 2 transitionend for each step
-      var trEndCount = 0;
-
-      wrapper.addEventListener('transitionend', function trWait(e) {
-        trEndCount++;
-
-        if (trEndCount < 2) {
-          return;
-        }
-
-        e.currentTarget.removeEventListener(e.type, trWait);
-        resolve();
-      });
-    });
+    return viewFromHash || viewFromPath;
   }
-};
 
-window.Navigation = EventDispatcher.mixin(Navigation, ['navigated']);
+  function findViewFromName(name) {
+    return VIEWS.find((object) => {
+      return object.name === name;
+    }) || null;
+  }
 
+  function executeNavigationStep(stepName, args) {
+    var viewObject = window[currentView.view];
+    if (viewObject[stepName]) {
+      return Promise.resolve(viewObject[stepName](args));
+    }
+    return Promise.resolve();
+  }
+
+  function attachAfterEnterHandler() {
+    function onNavigationEnd() {
+      window.removeEventListener('navigation-transition-end', onNavigationEnd);
+      window.removeEventListener('load', onNavigationEnd);
+      executeNavigationStep('afterEnter');
+    }
+
+    window.addEventListener('navigation-transition-end', onNavigationEnd);
+    window.addEventListener('load', onNavigationEnd); // simulate navigation end
+  }
+
+  var previousAnimationDefer;
+  function waitForSlideAnimation(panelElement) {
+    if (previousAnimationDefer) {
+      previousAnimationDefer.reject(new Error('A new animation started'));
+    }
+
+    var defer = Utils.Promise.defer();
+    previousAnimationDefer = defer;
+
+    panelElement.addEventListener('animationend', function onAnimationEnd() {
+      this.removeEventListener('animationend', onAnimationEnd);
+      defer.resolve();
+    });
+
+    return defer.promise.then(() => previousAnimationDefer = null);
+  }
+
+  // hides current panel, shows new panel
+  function switchPanel({oldView, newView}) {
+    var doSlideAnimation = oldView && newView;
+    var isGoingBack = oldView && newView && oldView.previous === newView.name;
+
+    var oldPanelElement =
+      oldView && document.querySelector(`.panel-${oldView.name}`);
+    var newPanelElement =
+      newView && document.querySelector(`.panel-${newView.name}`);
+
+    if (doSlideAnimation) {
+      newPanelElement.classList.add('panel-will-activate', 'panel-active');
+      oldPanelElement.classList.add('panel-will-deactivate');
+
+      newPanelElement.classList.toggle('panel-animation-back', isGoingBack);
+      oldPanelElement.classList.toggle('panel-animation-back', isGoingBack);
+
+      return waitForSlideAnimation(newPanelElement).then(() => {
+        oldPanelElement.classList.remove(
+          'panel-will-activate', 'panel-will-deactivate',
+          'panel-active', 'panel-animation-back'
+        );
+        newPanelElement.classList.remove(
+          'panel-will-deactivate', 'panel-will-activate', 'panel-animation-back'
+        );
+      }, () => {
+        oldPanelElement.classList.remove(
+          'panel-will-deactivate', 'panel-animation-back'
+        );
+        newPanelElement.classList.remove(
+          'panel-will-activate', 'panel-animation-back'
+        );
+      });
+    }
+
+    if (oldView) {
+      oldPanelElement.classList.remove('panel-active');
+    }
+
+    if (newView) {
+      newPanelElement.classList.add('panel-active');
+    }
+  }
+
+  function onPopState(e) {
+    var oldView = currentView;
+    currentView = findViewFromLocation(window.location);
+    if (!currentView) {
+      return;
+    }
+
+    var args = Utils.params(window.location.hash);
+    executeNavigationStep('beforeLeave', args).then(
+      () => executeNavigationStep('beforeEnter', args)
+    ).then(
+      () => switchPanel({ oldView, newView: currentView })
+    ).then(
+      () => executeNavigationStep('afterEnter', args)
+    );
+  }
+
+  function attachHistoryListener() {
+    //window.addEventListener('popstate', onPopState);
+    window.addEventListener('hashchange', onPopState);
+  }
+
+  function detachHistoryListener() {
+    //window.removeEventListener('popstate', onPopState);
+    window.removeEventListener('hashchange', onPopState);
+  }
+
+  exports.Navigation = {
+    back() {
+      return executeNavigationStep('beforeLeave').then(
+        () => window.history.back()
+      );
+    },
+
+    toPanel(viewName, args) {
+      var view = findViewFromName(viewName);
+
+      if (view === currentView) {
+        return Promise.resolve();
+      }
+
+      var parentView;
+      var nextLocation = view.url;
+      var hash = '';
+      if (view.partOf) {
+        parentView = findViewFromName(view.partOf);
+        nextLocation = parentView.url;
+        hash = `#!/${viewName}`;
+      }
+      var currentParentView = currentView;
+      if (currentView.partOf) {
+        currentParentView = findViewFromName(currentView.partOf);
+      }
+
+      var beforeLeavePromise = executeNavigationStep('beforeLeave', args);
+
+      hash = Utils.url(hash, args);
+      var oldView = currentView;
+
+      if (parentView === currentParentView) {
+        // no document change
+        return beforeLeavePromise.then(
+          () => setLocation(hash), currentView = view
+        ).then(
+          () => executeNavigationStep('beforeEnter', args)
+        ).then(
+          () => switchPanel({ oldView, newView: view })
+        ).then(
+          () => executeNavigationStep('afterEnter', args)
+        );
+      } else {
+        // document change
+        return beforeLeavePromise.then(
+          () => setLocation(nextLocation + hash)
+        );
+      }
+    },
+
+    init() {
+      currentView = findViewFromLocation(window.location);
+      if (!currentView) {
+        return;
+      }
+
+      var args = Utils.params(window.location.hash);
+      executeNavigationStep('beforeEnter', args).then(
+        () => switchPanel({ newView: currentView })
+      );
+      attachAfterEnterHandler();
+      attachHistoryListener();
+    },
+
+    /* will be used by tests */
+    cleanup() {
+      detachHistoryListener();
+    }
+  };
 })(window);
