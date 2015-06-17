@@ -112,7 +112,7 @@ var ConversationView = {
     }, this);
 
     this.mainWrapper = document.getElementById('main-wrapper');
-    this.threadMessages = document.getElementById('thread-messages');
+    this.threadMessages = document.querySelector('.panel-thread');
 
     window.addEventListener('resize', this.resizeHandler.bind(this));
 
@@ -524,6 +524,7 @@ var ConversationView = {
     }
 
     if (!this.isConversationPanel(args.id, prevPanel)) {
+      // we don't want to rerender if it's already rendered
       this.initializeRendering();
     }
 
@@ -575,6 +576,7 @@ var ConversationView = {
     var prevPanel = args.meta.prev;
 
     if (!this.isConversationPanel(threadId, prevPanel)) {
+      // we don't want to render again if it's already rendered for this thread
       this.renderMessages(threadId);
 
       // Populate draft if there is one
@@ -622,29 +624,31 @@ var ConversationView = {
     // to slide correctly. Bug 1009541
     this.cancelEdit();
 
-    if (Navigation.isCurrentPanel('thread')) {
-      // Revoke thumbnail URL for every image attachment rendered within thread
-      var nodes = this.container.querySelectorAll(
-        '.attachment-container[data-thumbnail]'
-      );
-      Array.from(nodes).forEach((node) => {
-        window.URL.revokeObjectURL(node.dataset.thumbnail);
-      });
-    }
+    // Revoke thumbnail URL for every image attachment rendered within thread
+    var nodes = this.container.querySelectorAll(
+      '.attachment-container[data-thumbnail]'
+    );
+    Array.from(nodes).forEach((node) => {
+      window.URL.revokeObjectURL(node.dataset.thumbnail);
+    });
 
     // TODO move most of back() here: Bug 1010223
     if (!this.isConversationPanel(Threads.currentId, nextPanel)) {
+      // clean fields when moving out of a conversation
       this.cleanFields();
     }
   },
 
   afterLeave: function conv_afterLeave(args) {
     if (Navigation.isCurrentPanel('thread-list')) {
+      // We don't want to clean these things when moving from composer to
+      // conversation
       this.container.textContent = '';
       this.cleanFields();
       Threads.currentId = null;
     }
     if (!Navigation.isCurrentPanel('composer')) {
+      // cleaning things up when moving from composer to conversation
       this.threadMessages.classList.remove('new');
 
       if (this.recipients) {
@@ -655,6 +659,8 @@ var ConversationView = {
     }
 
     if (!Navigation.isCurrentPanel('thread')) {
+      // things we do when we move from composer to inbox
+      // When we're in a thread, we already changed these things in beforeEnter.
       this.threadMessages.classList.remove('has-carrier');
       this.callNumberButton.classList.add('hide');
     }
@@ -2050,7 +2056,7 @@ var ConversationView = {
       }
 
       // If we reach the container, quit.
-      if (node.id === 'thread-messages') {
+      if (node.classList.contains('panel-thread')) {
         return null;
       }
     } while ((node = node.parentNode));
@@ -2706,11 +2712,6 @@ var ConversationView = {
   },
 
   onHeaderActivation: function conv_onHeaderActivation() {
-    // Do nothing while in participants list view.
-    if (!Navigation.isCurrentPanel('thread')) {
-      return;
-    }
-
     var participants = Threads.active && Threads.active.participants;
 
     // >1 Participants will enter "group view"
@@ -2746,7 +2747,6 @@ var ConversationView = {
   promptContact: function conv_promptContact(opts) {
     opts = opts || {};
 
-    var inMessage = opts.inMessage || false;
     var number = opts.number || '';
     var tel, email;
 
@@ -2777,21 +2777,17 @@ var ConversationView = {
 
       this.prompt({
         number: tel,
-        email: email,
+        email,
         header: fragment,
         contactId: id,
-        isContact: isContact,
-        inMessage: inMessage
+        isContact,
+        inMessage: opts.inMessage
       });
     }.bind(this));
   },
 
   prompt: function conv_prompt(opt) {
-    var complete = (function complete() {
-      if (!Navigation.isCurrentPanel('thread')) {
-        Navigation.toPanel('thread', { id: Threads.currentId });
-      }
-    }).bind(this);
+    var defer = Utils.Promise.defer();
 
     var thread = Threads.active;
     var number = opt.number || '';
@@ -2817,7 +2813,7 @@ var ConversationView = {
 
     params = {
       classes: ['contact-prompt'],
-      complete: complete,
+      complete: defer.resolve,
       header: header || '',
       items: null
     };
@@ -2906,6 +2902,7 @@ var ConversationView = {
     });
 
     new OptionMenu(params).show();
+    return defer.promise;
   },
 
   discardDraft: function conv_discardDraft() {

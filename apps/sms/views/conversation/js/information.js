@@ -203,7 +203,7 @@ function createListWithMsgInfo(message) {
 
 var VIEWS = {
   group: {
-    name: 'participants',
+    name: 'group-view',
     contactFlavor: 'group-view',
 
     render: function renderGroup() {
@@ -223,14 +223,16 @@ var VIEWS = {
 
         ConversationView.promptContact({
           number: target.dataset.number
-        });
+        }).then(
+          () => Navigation.toPanel('thread', Threads.currentId)
+        );
       });
     },
 
     elements: ['contact-list', 'header', 'header-text']
   },
   report: {
-    name: 'report',
+    name: 'report-view',
     contactFlavor: 'report-view',
 
     init: function() {
@@ -366,7 +368,7 @@ var Information = function(type) {
     this.init();
   }
 
-  this.panel = document.getElementById('information-' + this.name);
+  this.panel = document.querySelector('.panel-' + this.name);
 
   this.elements.forEach(function(name) {
     this[Utils.camelCase(name)] = this.panel.querySelector('.' + name);

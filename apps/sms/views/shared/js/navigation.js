@@ -303,6 +303,13 @@
     /* will be used by tests */
     cleanup() {
       detachHistoryListener();
+    },
+
+    isDefaultPanel() {
+      if (!currentView) {
+        throw new Error('CurrentView has not been found yet.');
+      }
+      return !currentView.partOf;
     }
   };
 })(window);

@@ -121,8 +121,6 @@ var Startup = {
         });
 
         InboxView.renderThreads();
-
-        Navigation.toDefaultPanel();
       } else {
         Navigation.once('navigated', () => InboxView.renderThreads());
 
