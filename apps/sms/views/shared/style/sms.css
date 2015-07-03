@@ -278,3 +278,8 @@ html[dir="rtl"] .contact-header aside.pack-end {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* focus control */
+.ignore-focus {
+  -moz-user-focus: ignore;
+}

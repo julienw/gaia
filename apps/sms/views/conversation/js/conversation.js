@@ -133,6 +133,12 @@ var ConversationView = {
       'focus', this.toFieldInput.bind(this), true
     );
 
+    ['touchstart', 'touchend', 'click', 'touchmove'].forEach(
+      (name) => this.sendButton.addEventListener(
+        name, (e) => console.log(name, e.target.tagName, e.target.id, e.target.className)
+      )
+    );
+
     this.sendButton.addEventListener(
       'click', this.onSendClick.bind(this)
     );
