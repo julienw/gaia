@@ -108,6 +108,14 @@
     },
 
     /**
+     * Returns "new message" drafts.
+     * @returns {Array.<Draft>}
+     */
+    getThreadLess() {
+      return Array.from(draftIndex.get(null) || []);
+    },
+
+    /**
      * Returns the draft object with the specified id.
      * @param {Number|String} id Id of the draft to return.
      * @returns {Draft} Found draft instance or null if nothing is found.

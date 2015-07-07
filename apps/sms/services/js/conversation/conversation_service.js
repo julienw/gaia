@@ -1,4 +1,8 @@
-/*global BridgeServiceMixin */
+/*global
+  bridge,
+  BridgeServiceMixin,
+  Drafts
+*/
 'use strict';
 
 if (!('BridgeServiceMixin' in self)) {
@@ -27,6 +31,10 @@ if (!('BridgeServiceMixin' in self)) {
      */
     init() {
       this.initService();
+
+      importScripts('/services/js/drafts.js');
+      this.mobileMessageClient = bridge.client('mozMobileMessageShim');
+      Drafts.request();
     },
 
     /**
@@ -35,7 +43,53 @@ if (!('BridgeServiceMixin' in self)) {
      * @param {ServiceStream.<ConversationSummary>} The stream to use in the
      * implementation: it will be passed autoamtically by the Bridge library.
      */
-    getAllConversations(stream) {},
+    getAllConversations(serviceStream) {
+      var stopEarly = false;
+      serviceStream.cancel = () => stopEarly = true;
+
+      Drafts.request().then(() => {
+        if (stopEarly) {
+          serviceStream.close();
+          return;
+        }
+        var clientStream = this.mobileMessageClient.stream('getMessages');
+        serviceStream.cancel = () => {
+          serviceStream.close();
+          return clientStream.cancel();
+        };
+
+        var drafts = Drafts.getThreadLess().sort(
+          // inverse sort by timestamp
+          (draftA, draftB) => draftB.timestamp - draftA.timestamp
+        );
+
+        var itDrafts = drafts[Symbol.iterator]();
+        var currentDraft = itDrafts.next();
+
+        // assume that we get the data in an inverse sort order
+        clientStream.listen((data) => {
+          while (
+            !currentDraft.done &&
+            currentDraft.timestamp > data.timestamp
+          ) {
+            serviceStream.write(currentDraft);
+            currentDraft = itDrafts.next();
+          }
+          serviceStream.write(data);
+        });
+
+        clientStream.closed.then(
+          () => {
+            while (!currentDraft.done) {
+              serviceStream.write(currentDraft);
+              currentDraft = itDrafts.next();
+            }
+            serviceStream.close();
+          },
+          (e) => serviceStream.abort(e)
+        );
+      });
+    },
 
     /**
      * Stream that returns messages in a conversation, with all suitable
