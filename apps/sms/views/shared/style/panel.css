@@ -11,7 +11,7 @@
 
   background: white;
 
-  animation: .5s both linear;
+  animation: .2s both linear;
   transform-origin: top;
 }
 
@@ -44,27 +44,9 @@
   from {
     transform: translateX(100%);
   }
-  10% {
-    transform: translateX(80%) rotate(-1deg) skewX(1deg);
-  }
-  66% {
-    transform: rotate(-1deg) skewX(1deg);
-  }
-  77% {
-    transform: rotate(1deg) scale(0.95, 0.98);
-  }
-  88% {
-    transform: rotate(-1deg);
-  }
 }
 
 @keyframes old-slide-left {
-  10% {
-    transform: translateX(-20%) rotate(-1deg) scale(1.05, 1.02) skewX(1deg);
-  }
-  66% {
-    transform: translateX(-100%) rotate(-1deg) skewX(1deg);
-  }
   to {
     transform: translateX(-100%);
   }
@@ -74,27 +56,9 @@
   from {
     transform: translateX(-100%);
   }
-  10% {
-    transform: translateX(-80%) rotate(1deg) skewX(-1deg);
-  }
-  66% {
-    transform: rotate(1deg) skewX(-1deg);
-  }
-  77% {
-    transform: rotate(-1deg) scale(0.95, 0.98);
-  }
-  88% {
-    transform: rotate(1deg);
-  }
 }
 
 @keyframes old-slide-right {
-  10% {
-    transform: translateX(20%) rotate(1deg) scale(1.05, 1.02) skewX(-1deg);
-  }
-  66% {
-    transform: translateX(100%) rotate(1deg) skewX(-1deg);
-  }
   to {
     transform: translateX(100%);
   }
