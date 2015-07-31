@@ -179,6 +179,7 @@ suite('ActivityHandler', function() {
       this.sinon.spy(Navigation, 'toPanel');
       this.sinon.spy(Drafts, 'add');
       this.sinon.spy(Drafts, 'store');
+      this.sinon.spy(Drafts, 'request');
 
       activityData = {
         type: 'video/*',
@@ -216,6 +217,7 @@ suite('ActivityHandler', function() {
           ]
         });
         sinon.assert.called(Drafts.store);
+        sinon.assert.callOrder(Drafts.request, Drafts.add, Drafts.store);
         sinon.assert.calledWith(
           Navigation.toPanel,
           'composer', { draftId: 'draftId', focusComposer: sinon.match.falsy }
@@ -261,6 +263,7 @@ suite('ActivityHandler', function() {
           content: [sinon.match.instanceOf(Attachment)]
         });
         sinon.assert.called(Drafts.store);
+        sinon.assert.callOrder(Drafts.request, Drafts.add, Drafts.store);
         sinon.assert.calledWith(
           Navigation.toPanel,
           'composer', { draftId: 'draftId', focusComposer: sinon.match.falsy }
@@ -286,6 +289,7 @@ suite('ActivityHandler', function() {
           content: [sinon.match.instanceOf(Attachment)]
         });
         sinon.assert.called(Drafts.store);
+        sinon.assert.callOrder(Drafts.request, Drafts.add, Drafts.store);
         sinon.assert.calledWith(
           Navigation.toPanel,
           'composer', { draftId: 'draftId', focusComposer: sinon.match.falsy }
@@ -313,6 +317,7 @@ suite('ActivityHandler', function() {
           content: [urlActivityData.url]
         });
         sinon.assert.called(Drafts.store);
+        sinon.assert.callOrder(Drafts.request, Drafts.add, Drafts.store);
         sinon.assert.calledWith(
           Navigation.toPanel,
           'composer', { draftId: 'draftId', focusComposer: sinon.match.falsy }
@@ -850,6 +855,7 @@ suite('ActivityHandler', function() {
       this.sinon.spy(Navigation, 'toPanel');
       this.sinon.spy(Drafts, 'add');
       this.sinon.spy(Drafts, 'store');
+      this.sinon.spy(Drafts, 'request');
       this.sinon.spy(ActivityHandler, '_onNewActivity');
 
       ActivityShim.hasPendingRequest.returns(true);
@@ -869,6 +875,7 @@ suite('ActivityHandler', function() {
           content: ['foo']
         });
         sinon.assert.called(Drafts.store);
+        sinon.assert.callOrder(Drafts.request, Drafts.add, Drafts.store);
         sinon.assert.calledWith(
           Navigation.toPanel,
           'composer', { draftId: 'draftId', focusComposer: true }
@@ -890,6 +897,7 @@ suite('ActivityHandler', function() {
           content: ['foo']
         });
         sinon.assert.called(Drafts.store);
+        sinon.assert.callOrder(Drafts.request, Drafts.add, Drafts.store);
         sinon.assert.calledWith(
           Navigation.toPanel,
           'composer', { draftId: 'draftId', focusComposer: sinon.match.falsy }
@@ -911,6 +919,7 @@ suite('ActivityHandler', function() {
           content: [emailActivityData.body]
         });
         sinon.assert.called(Drafts.store);
+        sinon.assert.callOrder(Drafts.request, Drafts.add, Drafts.store);
         sinon.assert.calledWith(
           Navigation.toPanel,
           'composer', { draftId: 'draftId', focusComposer: true }
