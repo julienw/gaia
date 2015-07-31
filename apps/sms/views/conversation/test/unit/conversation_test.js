@@ -3930,7 +3930,7 @@ suite('conversation.js >', function() {
 
     suite('message context menu actions >', function() {
       setup(function() {
-        this.sinon.spy(ConversationView, 'navigateToComposer');
+        this.sinon.spy(ConversationView, 'initiateNewMessage');
 
         link.dispatchEvent(contextMenuEvent);
       });
@@ -3940,7 +3940,7 @@ suite('conversation.js >', function() {
         MockOptionMenu.calls[0].items[0].method(messageId);
 
         sinon.assert.calledWith(
-          ConversationView.navigateToComposer, { messageId: messageId }
+          ConversationView.initiateNewMessage, { messageId: messageId }
         );
       });
     });
@@ -4295,7 +4295,7 @@ suite('conversation.js >', function() {
             MockSettings.supportEmailRecipient = true;
 
             this.sinon.spy(ActivityPicker, 'email');
-            this.sinon.spy(ConversationView, 'navigateToComposer');
+            this.sinon.spy(ConversationView, 'initiateNewMessage');
 
             ConversationView.prompt({
               email: 'a@b.com',
@@ -4336,7 +4336,7 @@ suite('conversation.js >', function() {
             items[1].method();
 
             sinon.assert.calledWith(
-              ConversationView.navigateToComposer, { number: 'a@b.com' }
+              ConversationView.initiateNewMessage, { number: 'a@b.com' }
             );
 
             // The third item is a "createNewContact" option
@@ -4506,7 +4506,7 @@ suite('conversation.js >', function() {
 
       suite('multi recipients, in group view >', function() {
         setup(function() {
-          this.sinon.spy(ConversationView, 'navigateToComposer');
+          this.sinon.spy(ConversationView, 'initiateNewMessage');
 
           Navigation.isCurrentPanel.withArgs('group-view').returns(true);
 
@@ -4547,7 +4547,7 @@ suite('conversation.js >', function() {
           items[1].method();
 
           sinon.assert.calledWith(
-            ConversationView.navigateToComposer, { number: '999' }
+            ConversationView.initiateNewMessage, { number: '999' }
           );
 
           // The third and last item is a "cancel" option
@@ -4671,7 +4671,7 @@ suite('conversation.js >', function() {
       });
     });
 
-    suite('navigateToComposer', function() {
+    suite('initiateNewMessage', function() {
       setup(function() {
         this.sinon.spy(Navigation, 'toPanel');
         this.sinon.spy(ConversationView, 'discardDraft');
@@ -4686,7 +4686,7 @@ suite('conversation.js >', function() {
       test('immediately navigates to Composer if no unsent message',
       function(done) {
         Threads.Messages.get.withArgs(1).returns(MockMessages.sms());
-        ConversationView.navigateToComposer({ messageId: 1 }).then(() => {
+        ConversationView.initiateNewMessage({ messageId: 1 }).then(() => {
           sinon.assert.calledWith(
             Navigation.toPanel,
             'composer', { draftId: 'draftId', focusComposer: sinon.match.falsy }
@@ -4705,7 +4705,7 @@ suite('conversation.js >', function() {
         Utils.confirm.returns(Promise.resolve());
         Threads.Messages.get.withArgs(1).returns(MockMessages.sms());
 
-        ConversationView.navigateToComposer({ messageId: 1 }).then(() => {
+        ConversationView.initiateNewMessage({ messageId: 1 }).then(() => {
           sinon.assert.calledWith(
             Utils.confirm,
             'unsent-message-text',
@@ -4730,7 +4730,7 @@ suite('conversation.js >', function() {
           Promise.reject()
         );
 
-        ConversationView.navigateToComposer({ number: '+123' }).then(() => {
+        ConversationView.initiateNewMessage({ number: '+123' }).then(() => {
           sinon.assert.calledWith(
             Navigation.toPanel,
             'composer', { draftId: 'draftId', focusComposer: true }
@@ -4748,7 +4748,7 @@ suite('conversation.js >', function() {
           Promise.resolve(100)
         );
 
-        ConversationView.navigateToComposer({ number: '+123' }).then(() => {
+        ConversationView.initiateNewMessage({ number: '+123' }).then(() => {
           sinon.assert.calledWith(
             Navigation.toPanel, 'thread', { id: 100, focusComposer: true }
           );
@@ -4756,7 +4756,7 @@ suite('conversation.js >', function() {
       });
 
       test('Rejects if called with a bad parameter', function(done) {
-        ConversationView.navigateToComposer({ test: 'test' }).then(
+        ConversationView.initiateNewMessage({ test: 'test' }).then(
           () => new Error('Should not be resolved.'),
           () => {}
         ).then(done, done);
@@ -4767,8 +4767,8 @@ suite('conversation.js >', function() {
         Compose.isEmpty.returns(false);
         Utils.confirm.returns(Promise.reject());
 
-        ConversationView.navigateToComposer({ test: 'test' }).then(() => {
-          throw new Error('navigateToComposer should be rejected!');
+        ConversationView.initiateNewMessage({ test: 'test' }).then(() => {
+          throw new Error('initiateNewMessage should be rejected!');
         }, () => {
           sinon.assert.calledWith(
             Utils.confirm,
