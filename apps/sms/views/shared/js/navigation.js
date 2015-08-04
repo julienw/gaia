@@ -528,12 +528,15 @@ function waitForSlideAnimation(panelElement) {
   var defer = Utils.Promise.defer();
   previousAnimationDefer = defer;
 
-  panelElement.addEventListener('animationend', function onAnimationEnd() {
-    this.removeEventListener('animationend', onAnimationEnd);
+  function onAnimationEnd(e) {
+    panelElement.removeEventListener('animationend', onAnimationEnd);
+    debug('animationend', e && e.type);
     defer.resolve();
-  });
+  }
 
-  setTimeout(defer.resolve, 500);
+  panelElement.addEventListener('animationend', onAnimationEnd);
+  setTimeout(onAnimationEnd, 500);
+
   return defer.promise.then(() => previousAnimationDefer = null);
 }
 
