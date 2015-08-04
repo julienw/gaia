@@ -18,7 +18,7 @@ var NavigationFactory = window.NavigationFactory = function(window) {
  * parameters to the first string.
  */
 var debug = 1 ?
-  (arg1, ...args) => console.log('[Navigation] ' + arg1, ...args) :
+  (arg1, ...args) => console.log('[Navigation] (%s) ' + arg1, Date.now(), ...args) :
   () => {};
 
 /**
