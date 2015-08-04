@@ -12,7 +12,6 @@
   background: white;
 
   animation: .2s both linear;
-  transform-origin: top;
 }
 
 .panel-active {
