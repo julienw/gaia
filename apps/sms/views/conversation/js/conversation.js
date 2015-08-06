@@ -1143,15 +1143,7 @@ var ConversationView = {
   },
 
   back: function conv_back() {
-    return this._onNavigatingBack().then(function(isDraftSaved) {
-      Navigation.toPanel('thread-list', {
-        notifyAboutSavedDraft: isDraftSaved
-      });
-    }.bind(this)).catch(function(e) {
-      e && console.error('Unexpected error while navigating back: ', e);
-
-      return Promise.reject(e);
-    });
+    history.back();
   },
 
   /**
