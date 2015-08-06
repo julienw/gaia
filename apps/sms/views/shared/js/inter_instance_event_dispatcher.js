@@ -39,7 +39,9 @@
       channel = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
       channel.addEventListener('message', onMessage);
 
-      exports.addEventListener('unload', () => this.disconnect());
+      exports.addEventListener('pagehide', () => this.disconnect());
+      exports.addEventListener('pageshow', () => this.connect());
+
     },
 
     disconnect: function() {

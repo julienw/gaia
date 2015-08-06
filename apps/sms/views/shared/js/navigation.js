@@ -498,12 +498,16 @@ function attachAfterEnterHandler() {
 
   function onNavigationEnd() {
     window.removeEventListener('navigation-transition-end', onNavigationEnd);
-    window.removeEventListener('load', onNavigationEnd);
+    window.removeEventListener('pageshow', onNavigationEnd);
     defer.resolve(executeNavigationStep('afterEnter'));
   }
 
   window.addEventListener('navigation-transition-end', onNavigationEnd);
-  window.addEventListener('load', onNavigationEnd); // simulate navigation end
+  // simulate navigation end
+  window.addEventListener('pageshow', onNavigationEnd);
+  window.addEventListener('pagehide', () => {
+    endNavigation();
+  });
 
   return defer.promise.catch(catchStepError);
 }

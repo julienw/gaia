@@ -29,6 +29,13 @@
     });
   }
 
+  function initPrerender() {
+    var prerender = document.createElement('link');
+    prerender.setAttribute('rel', 'prerender');
+    prerender.setAttribute('href', '/views/conversation/index.html');
+    document.head.appendChild(prerender);
+  }
+
   exports.Startup = {
     init() {
       MessageManager.init();
@@ -40,6 +47,7 @@
       });
 
       InboxView.renderThreads();
+      initPrerender();
     }
   };
 })(window);
