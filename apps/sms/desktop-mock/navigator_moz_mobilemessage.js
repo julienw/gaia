@@ -1049,7 +1049,7 @@
 
     var initiateSend = function() {
       messagesDb.messages.push(sendInfo.message);
-      trigger('sending', sendInfo);
+      //trigger('sending', sendInfo);
 
       setTimeout(completeSend, simulation.delay());
     };
@@ -1057,7 +1057,7 @@
     var completeSend = function() {
       request.result = sendInfo;
 
-      if (simulation.failState()) {
+      if (true) {
         sendInfo.message.delivery = 'error';
         request.error = {
           name: window.MessagesDebugError
