@@ -128,6 +128,21 @@
           // System Message Handler API is asking us to open the specific URL
           // that handles the pending system message.
           // We will launch it in background if it's not handling an activity.
+          //
+          // detail is {
+          //   url: pageURL to open,
+          //   manifestURL: application to open,
+          //   expectingSystemMessage: true,
+          //   isActivity: true/false,
+          //   target: activity description, otherwise undefined
+          //   showApp: usually false, can be true for some types
+          //   onlyShowApp: usually false, can be true for some types. If
+          //                showApp is true and onlyShowApp is false, it means
+          //                the system message already reached the app but we
+          //                still need to show the app. This can likely be
+          //                ignored.
+          //   extra: { manifestURL, pageURL } // parent window for activities
+          // }
           config.isSystemMessage = true;
           if (detail.isActivity) {
             config.isActivity = true;
@@ -136,7 +151,6 @@
               config.inline = true;
             }
           }
-          config.changeURL = !detail.onlyShowApp;
           config.stayBackground = !detail.showApp;
           if (detail.extra && detail.extra.manifestURL) {
             config.parentApp = detail.extra.manifestURL;
@@ -189,30 +203,20 @@
           config.url.indexOf('newtab.html') === -1) {
         return;
       }
-      var app = Service.query('getApp', config.origin, config.manifestURL);
-      if (app) {
-        if (config.evtType == 'appopenwindow') {
-          app.browser.element.src = config.url;
-        }
-        app.reviveBrowser();
 
-        // Always relaunch background app locally
+      var launchApp = () => {
+        // homescreenWindowManager already listens webapps-launch and
+        // open-app. We don't need to check if the launched app is homescreen.
+        this.forgetLastLaunchingWindow();
+        this.trackLauchingWindow(config);
+
         this.publish('launchapp', config);
+      };
+
+      if (Service.query('MultiScreenController.enabled')) {
+        Service.request('chooseDisplay', config).catch(launchApp);
       } else {
-        var launchApp = () => {
-          // homescreenWindowManager already listens webapps-launch and
-          // open-app. We don't need to check if the launched app is homescreen.
-          this.forgetLastLaunchingWindow();
-          this.trackLauchingWindow(config);
-
-          this.publish('launchapp', config);
-        };
-
-        if (Service.query('MultiScreenController.enabled')) {
-          Service.request('chooseDisplay', config).catch(launchApp);
-        } else {
-          launchApp();
-        }
+        launchApp();
       }
     },
 

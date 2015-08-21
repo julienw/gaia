@@ -771,13 +771,6 @@
      * @memberOf module:AppWindowManager
      */
     launch: function awm_launch(config) {
-      if (config.changeURL && this.getApp(config.origin)) {
-        // XXX: Potential problems here:
-        // there may be more than one app window instances
-        // have the same origin running,
-        // and we may change the wrong one.
-        this.getApp(config.origin).modifyURLatBackground(config.url);
-      }
       if (config.stayBackground) {
         return;
       } else {
