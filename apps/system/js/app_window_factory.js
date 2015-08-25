@@ -204,19 +204,33 @@
         return;
       }
 
-      var launchApp = () => {
-        // homescreenWindowManager already listens webapps-launch and
-        // open-app. We don't need to check if the launched app is homescreen.
-        this.forgetLastLaunchingWindow();
-        this.trackLauchingWindow(config);
+      var app = Service.query(
+        'getApp', config.origin, config.manifestURL, config.url
+      );
 
+      if (app) {
+        if (config.evtType == 'appopenwindow') {
+          app.browser.element.src = config.url;
+        }
+        app.reviveBrowser();
+
+        // Always relaunch background app locally
         this.publish('launchapp', config);
-      };
-
-      if (Service.query('MultiScreenController.enabled')) {
-        Service.request('chooseDisplay', config).catch(launchApp);
       } else {
-        launchApp();
+        var launchApp = () => {
+          // homescreenWindowManager already listens webapps-launch and
+          // open-app. We don't need to check if the launched app is homescreen.
+          this.forgetLastLaunchingWindow();
+          this.trackLauchingWindow(config);
+
+          this.publish('launchapp', config);
+        };
+
+        if (Service.query('MultiScreenController.enabled')) {
+          Service.request('chooseDisplay', config).catch(launchApp);
+        } else {
+          launchApp();
+        }
       }
     },
 

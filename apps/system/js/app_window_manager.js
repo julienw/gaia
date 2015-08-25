@@ -185,14 +185,16 @@
      * Match app origin and get the first matching one.
      * @param  {String} origin The origin to be matched.
      * @param  {String} [manifestURL] The manifestURL to be matched.
+     * @param  {String} [pageURL] The pageURL to be matched.
      * @return {AppWindow}        The app window object matched.
      */
-    getApp: function awm_getApp(origin, manifestURL) {
+    getApp: function awm_getApp(origin, manifestURL, pageURL) {
       for (var id in this._apps) {
         var app = this._apps[id];
         if (app.origin === origin &&
             (!manifestURL || app.manifestURL === manifestURL) &&
-            (!app.isBrowser() || app.config.url === origin)) {
+            (!app.isBrowser() || app.config.url === origin) &&
+            (!pageURL || app.config.url === pageURL)) {
           return app;
         }
       }
