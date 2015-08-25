@@ -88,7 +88,7 @@
     'app-suspending.enabled'
   ];
   BaseModule.create(AppWindowManager, {
-    DEBUG: false,
+    DEBUG: true,
     name: 'AppWindowManager',
     EVENT_PREFIX: 'appwindowmanager',
     continuousTransition: false,
@@ -780,7 +780,9 @@
         if (config.isActivity && this._activeApp) {
           this.linkWindowActivity(config);
         }
-        this.display(this.getApp(config.origin));
+        this.display(
+          this.getApp(config.origin, config.manifestURL, config.url)
+        );
       }
     },
 
