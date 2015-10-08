@@ -1,3 +1,23 @@
+/*
+ * How to use LoaderManager.
+ *
+ * module A:
+ *
+ * exports.A = LoaderManager.define('A', {
+ *   method() { // do something }
+ * });
+ *
+ * module B:
+ *
+ * exports.B = LoaderManager.define('B', {
+ *   method: LoaderManager.needs(['A'], function() {
+ *     return A.method();
+ *   })
+ * });
+ *
+ * B.method returns a Promise. When calling it, LoaderManager will actually call
+ * it only when A has been loaded, or defer its call otherwise.
+ */
 (function(exports) {
   'use strict';
 
