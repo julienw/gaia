@@ -41,10 +41,20 @@ HourDoubleTap.prototype = {
   },
 
   _onDayTap: function(evt) {
-    var target = evt.target;
-    if (!target.classList.contains('md__day')) {
+    var target = evt.target.closest('.md__day');
+    if (!target) {
       return;
     }
+
+    var tappedOnExistingEvent = evt.target.closest('a') &&
+      evt.offsetY > 0 && evt.offsetY < this.hourHeight;
+
+    if (tappedOnExistingEvent) {
+      return;
+    }
+
+    evt.stopPropagation();
+    evt.preventDefault();
 
     var y = evt.clientY + this.main.scrollTop - this._mainOffset;
     var hour = Math.floor(y / this.hourHeight);
