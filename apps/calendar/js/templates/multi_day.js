@@ -69,7 +69,7 @@ multiday.event = function() {
     </i>`;
   }
 
-  var className = ['md__event'];
+  var className = ['md__event', 'md__event-like-button'];
   if (alarmIcon) {
     className.push('has-alarms');
   }

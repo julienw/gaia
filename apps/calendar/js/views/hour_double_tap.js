@@ -40,20 +40,38 @@ HourDoubleTap.prototype = {
     this.alldaysHolder.removeEventListener('click', this._onAllDayTap);
   },
 
+  _isEventRightOnButton(evt) {
+    var target = evt.target;
+    if (!target.classList.contains('md__day')) {
+      // Could be aggressive event fuzzing registering a tap on an existing
+      // event or the "add event" UI, where the tap is really below that item.
+      // See bug 1210201.
+
+      // In this case, offsetY is the vertical space between the top of the
+      // element and the actual tap, so if the tap is bigger than the height
+      // of the element, treat it as an md__day tap.
+      var tappedOnExistingEvent =
+        target.classList.contains('md__event-like-button') &&
+        evt.offsetY >= 0 &&
+        evt.offsetY <= target.getBoundingClientRect().height;
+
+      if (tappedOnExistingEvent) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
   _onDayTap: function(evt) {
+    if (this._isEventRightOnButton(evt)) {
+      return;
+    }
+
     var target = evt.target.closest('.md__day');
-    if (!target) {
-      return;
-    }
-
-    var tappedOnExistingEvent = evt.target.closest('a') &&
-      evt.offsetY > 0 && evt.offsetY < this.hourHeight;
-
-    if (tappedOnExistingEvent) {
-      return;
-    }
-
-    evt.stopPropagation();
+    // Note that until Bug 1091889 gets fixed we'll still get the :active
+    // styles because they're being applied with `touchstart` and we can't
+    // defaultPrevent this event without breaking everything.
     evt.preventDefault();
 
     var y = evt.clientY + this.main.scrollTop - this._mainOffset;
@@ -91,7 +109,8 @@ HourDoubleTap.prototype = {
 
     var link = document.createElement('a');
     link.href = '/event/add/?' + QueryString.stringify(data);
-    link.className = 'md__add-event gaia-icon icon-newadd';
+    link.className =
+      'md__add-event md__event-like-button gaia-icon icon-newadd';
     link.dataset.l10nId = 'multi-day-new-event-link';
     link.style.top = (hour * this.hourHeight) + 'px';
     link.style.opacity = 0;

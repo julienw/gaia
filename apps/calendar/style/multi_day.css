@@ -474,3 +474,8 @@ html[dir="rtl"] .md__allday {
 }
 html[dir="ltr"] .md__add-event:before { transform: translate(-50%, -50%); }
 html[dir="rtl"] .md__add-event:before { transform: translate(50%, -50%); }
+
+/* events and add events buttons */
+.md__event-like-button > * {
+  pointer-events: none;
+}
