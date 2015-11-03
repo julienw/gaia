@@ -321,6 +321,18 @@ marionette('week view', function() {
     }
   });
 
+  suite.only('event retargeting tests', function() {
+    test('test', function() {
+      week.waitForHourScrollEnd();
+      week.scrollToHour(10);
+      assert.doesNotThrow(function() {
+      week.tapDayHour(week.days[7], 10);
+      });
+      week.actions.wait(3).perform();
+    });
+  });
+
+
   suite('12/24 hour format', function() {
     // Refer to http://bugzil.la/1061135.
     test.skip('default format: 12 hour', function() {

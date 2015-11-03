@@ -7,6 +7,8 @@ function Week() {
 }
 module.exports = Week;
 
+var hourHeight = 50;
+
 Week.prototype = {
   __proto__: View.prototype,
 
@@ -18,6 +20,10 @@ Week.prototype = {
 
   get events() {
     return this.findElements('.md__event');
+  },
+
+  get addEventButton() {
+    return this.findElement('.md__add-event');
   },
 
   get todayDates() {
@@ -75,6 +81,89 @@ Week.prototype = {
     return this.main.scriptWith(function(el) {
       return el.scrollTop;
     });
+  },
+
+  _isHourDisplayed: function(hour) {
+    return this._cmpHourDisplayed(hour) === 0;
+  },
+
+  /**
+   * @returns 0 if it's displayed, -1 if it's above, +1 if it's below
+   */
+  _cmpHourDisplayed: function(hour) {
+    var hourElt = this.hours[hour];
+    var mainScroll = this.scrollTop;
+    var hourOffset = hourElt.scriptWith(function(el) { return el.offsetTop; });
+    var mainClientHeight = this.main.rect().height;
+    var hourHeight = hourElt.rect().height;
+
+    if (hourOffset < mainScroll) {
+      return -1;
+    }
+    if ((hourOffset + hourHeight) > (mainScroll + mainClientHeight)) {
+      return 1;
+    }
+    return 0;
+  },
+
+  _waitForNoScroll: function() {
+    var prevScrollTop = null;
+    this.client.waitFor(function() {
+      var currentScrollTop = this.scrollTop;
+      if (prevScrollTop !== null && prevScrollTop === currentScrollTop) {
+        return true;
+      }
+      prevScrollTop = currentScrollTop;
+      return false;
+    }.bind(this));
+  },
+
+  scrollToHour: function(hour) {
+    if (this._isHourDisplayed(hour)) {
+      return;
+    }
+
+    this.client.waitFor(function() {
+      var where = this._cmpHourDisplayed(hour);
+      console.log(where);
+      if (where === 0) {
+        return true;
+      }
+
+      // element is hidden above the visible part
+      // we need to move it up
+      if (where < 0) {
+        this.actions.flick(
+          this.element,
+          100, 10, 100, 50
+        ).perform();
+      }
+      // element is hidden below the visible part.
+      // we need to move it down
+      if (where > 0) {
+        this.actions.flick(
+          this.element,
+          100, 50, 100, 10
+        ).perform();
+      }
+
+      this._waitForNoScroll();
+      return false;
+    }.bind(this));
+  },
+
+  tapDayHour: function(dayElt, hour) {
+    //this.scrollToHour(hour);
+
+    var top = hourHeight * hour;
+
+    console.log(top);
+    console.log(dayElt.displayed());
+    console.log(this.scrollTop);
+
+    console.log('will tap at', 25, top + hourHeight / 2)
+    dayElt.tap(25, top - this.scrollTop + hourHeight / 2);
+    console.log('plop');
   },
 
   waitForHourScrollEnd: function(hour) {
