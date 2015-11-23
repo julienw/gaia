@@ -74,15 +74,13 @@ marionette('Conversation Panel Tests', function() {
 
 
     suite('Long MMS thread', function() {
-      function readFile(file) {
-        return require('fs').readFileSync(file, { encoding: 'base64' });
-      }
-
       var thread;
       var inboxView;
-      var attachmentScreenshot = readFile(
-        './apps/sms/test/marionette/assets/mms-attachment.png'
-      );
+      var attachmentScreenshot;
+
+      suiteSetup(function() {
+        attachmentScreenshot = Tools.loadAsset('mms-attachment.png');
+      });
 
       suiteTeardown(function() {
         attachmentScreenshot = null;
@@ -90,8 +88,8 @@ marionette('Conversation Panel Tests', function() {
 
       setup(function() {
         thread = ThreadGenerator.generate({
-          numberOfMessages: 50,
-          baseTimestamp: 1441114844358,
+          numberOfMessages: 150,
+          baseTimestamp: Date.UTC(2015, 8, 1, 13, 40),
           messageType: 'mms',
           attachments: [
             { type: 'image/png', width: 10, height: 10 }
@@ -117,8 +115,6 @@ marionette('Conversation Panel Tests', function() {
         assert.equal(screenshot, attachmentScreenshot);
 
         conversationView.fakeScrollUpTo(0);
-        conversationView.fakeScrollUpTo(0);
-        conversationView.fakeScrollUpTo(0);
 
         // Find the first displayed message. Displayed does not especially mean
         // that we see it in the viewport, it merely means it's not "hidden"
@@ -133,7 +129,6 @@ marionette('Conversation Panel Tests', function() {
         conversationView.fakeScrollUpTo(0);
 
         screenshot = displayedMessage.attachments[0].screenshot();
-        client.loader.getActions().wait(3).perform();
         assert.equal(screenshot, attachmentScreenshot);
       });
     });
