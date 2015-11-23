@@ -62,6 +62,12 @@ ConversationView.prototype = {
     return this.accessors.carrierHeaderPhoneNumber.text();
   },
 
+  get containerScrollHeight() {
+    return this.accessors.container.scriptWith(function(el) {
+      return el.scrollHeight;
+    });
+  },
+
   findMessage: function(messageId) {
     var messageNode = this.messageAccessors.find(messageId);
     return messageNode && this.messageAccessors.parse(messageNode);
@@ -232,6 +238,23 @@ ConversationView.prototype = {
   isSubjectVisible: function() {
     var subjectInput = this.composerAccessors.subjectInput;
     return subjectInput && this.composerAccessors.subjectInput.displayed();
+  },
+
+  scrollUp: function() {
+    this.accessors.scrollUp();
+    Tools.waitForEndOfScroll(this.client, this.accessors.container);
+  },
+
+  scrollUpToDisplayMoreMessages() {
+    var height = this.containerScrollHeight;
+    this.client.waitFor(function() {
+      this.scrollUp();
+      var newHeight = this.containerScrollHeight;
+      if (height !== newHeight) {
+        return true;
+      }
+      return false;
+    }.bind(this));
   },
 
   fakeScrollUpTo: function(scrollTop) {

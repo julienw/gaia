@@ -22,5 +22,20 @@ module.exports = {
   loadAsset: function(assetName) {
     var fileName = ASSETS_DIR + assetName;
     return require('fs').readFileSync(fileName, { encoding: 'base64' });
+  },
+
+  waitForEndOfScroll: function(client, container) {
+    var scrollTop = null;
+    client.waitFor(function() {
+      var newScrollTop = container.scriptWith(function(el) {
+        return el.scrollTop;
+      });
+
+      if (scrollTop !== null && scrollTop === newScrollTop) {
+        return true;
+      }
+      scrollTop = newScrollTop;
+      return false;
+    });
   }
 };

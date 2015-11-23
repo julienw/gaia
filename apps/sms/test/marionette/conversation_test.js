@@ -102,7 +102,7 @@ marionette('Conversation Panel Tests', function() {
         inboxView = new InboxView(client);
       });
 
-      test('MMS are properly displayed after going to a subview', function() {
+      test.only('MMS are properly displayed after going to a subview', function() {
         var conversationView = inboxView.goToConversation(thread.id);
         conversationView.waitForFullRendering(thread);
 
@@ -114,7 +114,7 @@ marionette('Conversation Panel Tests', function() {
         var screenshot = message.attachments[0].screenshot();
         assert.equal(screenshot, attachmentScreenshot);
 
-        conversationView.fakeScrollUpTo(0);
+        conversationView.scrollUpToDisplayMoreMessages();
 
         // Find the first displayed message. Displayed does not especially mean
         // that we see it in the viewport, it merely means it's not "hidden"
@@ -126,7 +126,7 @@ marionette('Conversation Panel Tests', function() {
           function(message) { return message.isDisplayed; }
         );
 
-        conversationView.fakeScrollUpTo(0);
+        conversationView.scrollUpToDisplayMoreMessages();
 
         screenshot = displayedMessage.attachments[0].screenshot();
         assert.equal(screenshot, attachmentScreenshot);

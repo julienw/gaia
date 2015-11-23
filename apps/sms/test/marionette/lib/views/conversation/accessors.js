@@ -32,6 +32,10 @@ function ConversationAccessor(client) {
 }
 
 ConversationAccessor.prototype = {
+  get container() {
+    return this.client.findElement(SELECTORS.container);
+  },
+
   get messages() {
     return this.client.findElements(SELECTORS.message);
   },
@@ -103,19 +107,11 @@ ConversationAccessor.prototype = {
   },
 
   scrollUp: function() {
-    var conversationContainer = this.client.findElement(
-      SELECTORS.container
-    );
-
-    this.actions.flick(conversationContainer, 50, 50, 50, 350).perform();
+    this.actions.flick(this.container, 50, 50, 50, 350).perform();
   },
 
   fakeScrollUpTo: function(scrollTop) {
-    var conversationContainer = this.client.findElement(
-      SELECTORS.container
-    );
-
-    conversationContainer.scriptWith(function(container, scrollTop) {
+    this.container.scriptWith(function(container, scrollTop) {
       container.scrollTop = scrollTop;
     }, scrollTop);
   },
