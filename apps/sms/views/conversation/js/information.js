@@ -209,6 +209,12 @@ function createListWithMsgInfo(message) {
   if (message.delivery === 'received' ||
       message.delivery === 'not-downloaded') { // received message
     list.push(message.sender);
+    if (message.type === 'mms') {
+      message.deliveryInfo.forEach(function(info) {
+        list.push({number: info.receiver,
+                   infoBlock: createReportDiv(info)});
+      });
+    }
   } else if (message.type === 'mms') { // sent mms message
     message.deliveryInfo.forEach(function(info) {
       list.push({number: info.receiver,
