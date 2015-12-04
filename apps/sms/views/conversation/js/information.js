@@ -208,12 +208,16 @@ function createListWithMsgInfo(message) {
   var list = [];
   if (message.delivery === 'received' ||
       message.delivery === 'not-downloaded') { // received message
-    list.push(message.sender);
     if (message.type === 'mms') {
-      message.deliveryInfo.forEach(function(info) {
-        list.push({number: info.receiver,
-                   infoBlock: createReportDiv(info)});
+      var numbers = message.receivers;
+      if (message.receivers.indexOf(message.sender)==-1) {
+        numbers.push(message.sender);
+      }
+      numbers.forEach(function(number) {
+        list.push(number);
       });
+    } else {
+      list.push(message.sender);
     }
   } else if (message.type === 'mms') { // sent mms message
     message.deliveryInfo.forEach(function(info) {
