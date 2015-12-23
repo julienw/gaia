@@ -209,13 +209,12 @@ function createListWithMsgInfo(message) {
   if (message.delivery === 'received' ||
       message.delivery === 'not-downloaded') { // received message
     if (message.type === 'mms') {
-      var numbers = message.receivers;
-      if (message.receivers.indexOf(message.sender)==-1) {
-        numbers.push(message.sender);
+      if (message.receivers) {
+        list.push(...message.receivers);
       }
-      numbers.forEach(function(number) {
-        list.push(number);
-      });
+      if (!list.includes(message.sender)) {
+        list.push(message.sender);
+      }
     } else {
       list.push(message.sender);
     }
