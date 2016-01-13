@@ -368,8 +368,10 @@ suite('Information view', function() {
         );
       }
       if (receivers) {
-        sinon.assert.calledWithMatch(reportView.renderContactList,
-                                     receivers.concat('sender'));
+        sinon.assert.calledWithMatch(
+          reportView.renderContactList,
+          receivers.concat('sender')
+        );
       } else {
         sinon.assert.calledWith(reportView.renderContactList);
       }
