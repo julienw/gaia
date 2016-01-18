@@ -317,7 +317,7 @@ suite('Information view', function() {
         sizeHide,
         sizeContent,
         isIncoming,
-        receivers
+        expectedList
       } = opts;
 
       assert.equal(reportView.container.dataset.delivery, delivery);
@@ -367,14 +367,11 @@ suite('Information view', function() {
           sizeContent
         );
       }
-      if (receivers) {
-        sinon.assert.calledWithMatch(
-          reportView.renderContactList,
-          receivers.concat('sender')
-        );
-      } else {
-        sinon.assert.calledWith(reportView.renderContactList);
-      }
+
+      sinon.assert.calledWithMatch(
+        reportView.renderContactList,
+        expectedList
+      );
     }
 
     test('gaia-header is properly set up', function() {
@@ -397,7 +394,7 @@ suite('Information view', function() {
         contactTitle: 'report-to-title',
         sizeHide: true,
         isIncoming: false,
-        receivers: messageOpts.receivers,
+        expectedList: [ sinon.match({ number: 'receiver' }) ]
       });
     });
 
@@ -419,7 +416,7 @@ suite('Information view', function() {
         contactTitle: 'report-to-title',
         sizeHide: true,
         isIncoming: false,
-        receivers: messageOpts.receivers,
+        expectedList: [ sinon.match({ number: 'receiver' }) ]
       });
     });
 
@@ -440,7 +437,7 @@ suite('Information view', function() {
         contactTitle: 'report-to-title',
         sizeHide: true,
         isIncoming: false,
-        receivers: messageOpts.receivers,
+        expectedList: [ sinon.match({ number: 'receiver' }) ]
       });
     });
 
@@ -465,7 +462,7 @@ suite('Information view', function() {
         contactTitle: 'report-to-title',
         sizeHide: true,
         isIncoming: false,
-        receivers: messageOpts.receivers,
+        expectedList: [ sinon.match({ number: 'receiver' }) ]
       });
     });
 
@@ -489,7 +486,7 @@ suite('Information view', function() {
         sizeHide: false,
         sizeContent: { n: (testImageBlob.size / 1024).toFixed(1) },
         isIncoming: false,
-        receivers: messageOpts.receivers,
+        expectedList: [ sinon.match({ number: 'receiver' }) ]
       });
     });
 
@@ -507,7 +504,7 @@ suite('Information view', function() {
         contactTitle: 'report-from-title',
         sizeHide: true,
         isIncoming: true,
-        receivers: messageOpts.receivers,
+        expectedList: [ 'sender' ]
       });
     });
 
@@ -529,7 +526,7 @@ suite('Information view', function() {
         sizeHide: false,
         sizeContent: { n: (testImageBlob.size / 1024).toFixed(1) },
         isIncoming: true,
-        receivers: messageOpts.receivers,
+        expectedList: [ '345', '45678', 'sender' ]
       });
     });
 
@@ -549,7 +546,7 @@ suite('Information view', function() {
         contactTitle: 'report-from-title',
         sizeHide: true,
         isIncoming: true,
-        receivers: messageOpts.receivers
+        expectedList: [ 'sender' ]
       });
     });
 
