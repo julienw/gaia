@@ -232,7 +232,7 @@ function execute(options) {
             // Some app folder name is different with the process name,
             // ex. sms -> Messages
             var zip = utils.getZip();
-            zip.load(targetFolder);
+            zip.load(targetFolder, 'read');
             var manifest = JSON.parse(zip.file('manifest.webapp'));
             utils.log(JOB_NAME, 'Restarting ' + manifest.name + '...');
             utils.killAppByPid(manifest.name, gaiaDir);
