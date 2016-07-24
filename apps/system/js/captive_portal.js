@@ -30,9 +30,11 @@ var CaptivePortal = {
     var currentNetwork = wifiManager.connection.network;
     var networkName = (currentNetwork && currentNetwork.ssid) ?
         currentNetwork.ssid : '';
-    var message = { id: 'captive-wifi-available', 
-                    args: { networkName: networkName }
-                  };
+    var message = { id: 'captive-wifi-available' };
+    var messageTitle = {
+      id: 'captive-wifi-title',
+      args: { networkName: networkName }
+    };
 
     if (Service.query('isFtuRunning')) {
       settings.createLock().set({'wifi.connect_via_settings': false});
@@ -75,7 +77,7 @@ var CaptivePortal = {
       }
     };
 
-    NotificationHelper.send('', options).then(notification => {
+    NotificationHelper.send(messageTitle, options).then(notification => {
       this.notification = notification;
       notification.addEventListener('click',
         this.captiveNotification_onClick);
