@@ -1259,13 +1259,24 @@
       return;
     }
 
-    cursor = state.selectionStart;
-    selection = (state.selectionEnd > state.selectionStart) ?
+    var newCursor = state.selectionStart;
+    var newSelection = (state.selectionEnd > state.selectionStart) ?
       state.selectionEnd : 0;
-    inputText = state.text;
+    var newInputText = state.text;
 
-    dismissSuggestions();
-    updateSuggestions();
+    // Check if the state really changed
+    if (
+      cursor !== newCursor ||
+      selection !== newSelection ||
+      inputText !== newInputText
+    ) {
+      cursor = newCursor;
+      selection = newSelection;
+      inputText = newInputText;
+
+      dismissSuggestions();
+      updateSuggestions();
+    }
   }
 
   if (!('PAGE_INDEX_DEFAULT' in window)) {
