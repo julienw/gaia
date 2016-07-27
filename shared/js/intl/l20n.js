@@ -781,7 +781,10 @@
     }
 
     _formatEntity(lang, args, entity, id) {
-      const [, value] = this._formatTuple(lang, args, entity, id);
+      var [possibleError, value] = this._formatTuple(lang, args, entity, id);
+      if (possibleError.error) {
+        value = '';
+      }
 
       const formatted = {
         value,
@@ -911,7 +914,7 @@
       const id = Array.isArray(key) ? key[0] : key;
       missingIds.add(id);
       resolved[i] = formatter === this._formatValue ?
-        id : {value: id, attrs: null};
+        id : {value: '', attrs: null};
     });
 
     this.emit('notfounderror', new L10nError(
