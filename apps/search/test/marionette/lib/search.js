@@ -3,7 +3,7 @@
 
 var assert = require('assert');
 
-var PROVIDERS_VERSION = 3;
+var PROVIDERS_VERSION = 4;
 /**
  * Abstraction around search app.
  * @constructor

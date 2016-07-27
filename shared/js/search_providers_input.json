@@ -47,6 +47,18 @@
         "url": "https://www.bing.com/osjson.aspx",
         "params": {"query": "{searchTerms}"}
       }
+    },
+
+    "qwant": {
+      "title": "Qwant",
+      "search": {
+        "url": "https://www.qwant.com/",
+        "params": {"q": "{searchTerms}", "client": "ffos"}
+      },
+      "suggest": {
+        "url": "https://api.qwant.com/api/suggest",
+        "params": {"q": "{searchTerms}", "client": "opensearch"}
+      }
     }
 
   },
@@ -68,7 +80,8 @@
       "yahoo": {},
       "google": {},
       "bing": {},
-      "ddg": {}
+      "ddg": {},
+      "qwant": {}
     }
   },
 
