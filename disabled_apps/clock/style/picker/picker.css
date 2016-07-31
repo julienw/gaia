@@ -28,7 +28,6 @@
   width: calc(100% - 5.5rem);
   height: 22.5rem;
   margin: 1.8rem auto;
-  padding-top: 8.8rem;
   border-left:  0.1rem solid #111;
   border-right: 0.1rem solid #111;
   overflow: hidden;
@@ -36,86 +35,51 @@
 }
 
 [data-type="picker"] .picker-labels {
-  position: absolute;
-  top: 0px;
   width: 100%;
   z-index: 2;
+  position: relative; /* so that z-index is actually applied */
+
+  display: flex;
 }
 
 [data-type="picker"] .picker-label {
+  flex: 1;
+
   background: #333;
   height: 3rem;
   font-size: 1.4rem;
   line-height: 3rem;
   text-align: center;
-  width: 50%;
 }
 
-[data-type="picker"] #hours {
-  float: left;
+.picker-inputs {
+  display: flex;
+  position: relative; /* to position absolutely its children */
 }
 
-[data-type="picker"] #minutes {
-  float: right;
+.picker-wrapper {
+  flex: 1;
+
+  padding-top: 5.3rem;
 }
 
-[data-type="picker"] .picker-bar-background {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: calc(100% / 2);
-  height: 100%;
+.picker-hours-wrapper {
+  border-right: solid 0.2rem #4a4a4a;
 }
 
-#time-picker.picker-bar-background {
-  display: none;
-}
-
-[data-type="picker"] .picker-hours-wrapper,
-[data-type="picker"] .picker-minutes-wrapper {
-  -moz-box-sizing: border-box;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: calc(100% / 2);
-  height: 100%;
-  padding-top: 8.3rem;
-}
-
-[data-type="picker"] .picker-hours-wrapper {
-  border-right: solid 0.2rem;
-  -moz-border-right-colors: #1d1d1d #4a4a4a;
-}
-
-[data-type="picker"] .picker-minutes-wrapper {
-  left: calc(100% / 2);
-}
-
-[data-type="picker"] .picker-hours-wrapper,
-[data-type="picker"] .picker-minutes-wrapper,
-[data-type="picker"] .picker-bar-background {
-  width: 50%;
-}
-
-/*[data-type="picker"] .picker-minutes-wrapper {
-  left: auto;
-  right: 0;
-  border: none;
-}*/
-
-
-[data-type="picker"] .picker-hours,
-[data-type="picker"] .picker-minutes {
-  -moz-user-select: none;
-  position: relative;
-  width: 100%;
-  z-index: 1;
+.picker-seconds-wrapper {
+  border-left: solid 0.2rem #4a4a4a;
 }
 
 [data-type="picker"] .value-indicator {
   position: absolute;
+  top: 8.8rem;
+  left: 0;
   width: 100%;
-  height: 4.6rem;
+
+  display: flex;
+  justify-content: space-between;
+
   background-color: #00A5C5;
   box-shadow: 0 0 0.7rem rgba(0,0,0, .4);
   opacity: .99;
@@ -123,30 +87,18 @@
 }
 
 [data-type="picker"] .value-indicator-colon {
-  float: left;
-  position: relative;
-  width: calc(100% / 2);
-  height: 100%;
-  font: 2.2rem/4.4rem Sans-serif;
-  text-align: right;
+  font: 2.2rem/4.4rem sans-serif;
   background-color: #00A5C5;
   pointer-events: none;
 }
 
-
-[data-type="picker"] .value-indicator-period {
-  float: left;
-  position: relative;
-  width: calc(100% / 2);
-  height: 100%;
-  font: 2.2rem/4.4rem Sans-serif;
-  text-align: right;
-  background-color: #00A5C5;
-  pointer-events: none;
+.value-indicator-interval {
+  flex: auto;
 }
 
-
-
+.picker-input {
+  z-index: 1;
+}
 
 [data-type="picker"] .animation-on {
   transition-duration: var(--transition-duration);

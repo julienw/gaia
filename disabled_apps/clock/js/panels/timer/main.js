@@ -21,7 +21,8 @@ function timeFromPicker(value) {
   hm = value.split(':');
   ms = Utils.dateMath.toMS({
         hours: hm[0],
-        minutes: hm[1]
+        minutes: hm[1],
+        seconds: hm[2]
        });
   return ms;
 }
@@ -57,6 +58,12 @@ Timer.Panel = function(element) {
         range: [0, 59],
         isPadded: true,
         l10nId: 'nSpinnerMinutes'
+      },
+      seconds: {
+        range: [0, 59],
+        isPadded: true,
+        step: 5,
+        l10nId: 'nSpinnerSeconds'
       }
     }
   });
@@ -122,6 +129,7 @@ Timer.Panel = function(element) {
   // The start button is enable if the value of the timer is not 00:00
   picker.nodes.minutes.addEventListener('transitionend', enableButton);
   picker.nodes.hours.addEventListener('transitionend', enableButton);
+  picker.nodes.seconds.addEventListener('transitionend', enableButton);
 
   this.restoreDefaults().then(() => {
     enableButton(); // Update the enabled state to match the new defaults.
