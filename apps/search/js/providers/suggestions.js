@@ -97,9 +97,11 @@
         return new Promise((resolve, reject) => {
           var url = encodeTerms(SearchProvider('suggestUrl'), input);
           LazyLoader.getJSON(url, true).then(result => {
-            var results = result[1];
+            var results = result[1] || [];
             // We add an item to search the entered term as well
-            results.unshift(input);
+            if (results[0] !== input) {
+              results.unshift(input);
+            }
             resolve(results);
           }).catch(function() {
             suggestionsWrapper.dataset.loading = false;
