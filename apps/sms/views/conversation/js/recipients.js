@@ -14,11 +14,9 @@
   var data = new WeakMap();
   var events = new WeakMap();
   var relation = new WeakMap();
-  var rdigit = /^\d/;
+  var rdigit = /^[+(]?\d/;
 
   function Recipient(opts) {
-    var number;
-
     opts = opts || {};
     this.name = String(opts.name || opts.number || '');
     this.number = (opts.number || '') + '';
@@ -49,15 +47,9 @@
     //
     this.isQuestionable = opts.isQuestionable || false;
 
-    // If the recipient was entered manually and
-    // the trimmed, typed text starts with a non-number
-    // (ignoring the presense of a '+'), the input value
-    // is questionable and may be invalid.
-    number = this.number[0] === '+' ? this.number.slice(1) : this.number;
-
     if (this.isEmail) {
       this.className += ' email';
-    } else if (this.source === 'manual' && !rdigit.test(number)) {
+    } else if (this.source === 'manual' && !rdigit.test(this.number)) {
       this.isQuestionable = true;
     }
 
