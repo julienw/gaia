@@ -39,10 +39,11 @@ define(function(require) {
       var values = [];
       var range = setup.pickers[picker].range;
       var isPadded = setup.pickers[picker].isPadded || false;
+      var step = setup.pickers[picker].step || 1;
 
       this.nodes[picker] = setup.element.querySelector('.picker-' + picker);
 
-      for (var i = range[0]; i <= range[1]; i++) {
+      for (var i = range[0]; i <= range[1]; i += step) {
         values.push(i);
       }
 
