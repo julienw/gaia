@@ -60,18 +60,24 @@
   position: absolute;
   bottom: 0;
   right: 0;
+  left: 0;
 
-  margin-right: 3rem;
-  margin-bottom: 3rem;
+  display: flex;
 }
 
 #timer-plus-time button {
+  flex: 1;
   background: #101111;
   border: none;
   color: #CFE2E6;
   font: 2.5rem sans-serif;
   font-weight: normal;
   text-decoration: none;
+}
+
+#timer-plus-time button:active {
+  background: #cfe2e6;
+  color: #101111;
 }
 
 @media (min-width: 768px) {
