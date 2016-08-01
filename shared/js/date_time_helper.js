@@ -10,6 +10,8 @@
   'use strict';
   // not polyfill if API already exists
   if (window.navigator.mozHour12 || window.navigator.hour12) {return;}
+  // not polyfill if there is no mozSettings
+  if (!window.navigator.mozSettings) { return; }
 
   // mock mozHour12 onto window.navigator
   window.navigator.mozHour12 = undefined;

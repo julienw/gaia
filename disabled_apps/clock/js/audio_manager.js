@@ -36,6 +36,9 @@ define(function(require) {
   }
 
   function requestAlarmSystemVolume() {
+    if (!navigator.mozSettings) {
+      return Promise.resolve(SYSTEM_VOLUME_MAX);
+    }
     // Asynchronously load the alarm volume from mozSettings.
     return new Promise(function(resolve, reject) {
       var lock = navigator.mozSettings.createLock();

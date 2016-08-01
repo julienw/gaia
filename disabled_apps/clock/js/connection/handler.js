@@ -7,6 +7,10 @@ var handlers = {
 };
 
 exports.init = function() {
+  if (!navigator.mozSetMessageHandler) {
+    return;
+  }
+
   navigator.mozSetMessageHandler('connection', req => {
     var port = req.port;
     var handler = handlers[req.keyword];
