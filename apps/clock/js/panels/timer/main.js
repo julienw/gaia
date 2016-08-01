@@ -73,14 +73,14 @@ Timer.Panel = function(element) {
   // Gather elements
   [
     'create', 'cancel', 'dialog', 'pause', 'start', 'sound', 'time', 'vibrate',
-    'plus'
+    'plus-time'
   ].forEach(function(id) {
     this.nodes[id] = this.element.querySelector('#timer-' + id);
   }, this);
 
   // Bind click events
   [
-    'create', 'cancel', 'pause', 'start', 'plus'
+    'create', 'cancel', 'pause', 'start', 'plus-time'
   ].forEach(function(action) {
     var element = this.nodes[action];
 
@@ -284,7 +284,7 @@ Timer.Panel.prototype.pauseAlarm = function() {
  * @param  {Event} event The Event object.
  */
 Timer.Panel.prototype.onclick = function(event) {
-  var meta = priv.get(event.target);
+  var meta = priv.get(event.currentTarget);
   var panel = meta.panel;
   var nodes = panel.nodes;
   var timer = panel.timer;
@@ -304,7 +304,11 @@ Timer.Panel.prototype.onclick = function(event) {
 
     // Hide the new timer dialog
     panel.hideDialog();
-  } else if (meta.action === 'plus') {
+  } else if (meta.action === 'plus-time') {
+    if (!event.target.dataset.value) {
+      // we're not on a button
+      return;
+    }
     timer.plus(+event.target.dataset.value);
     // need to update immediately cause timer might be paused during click
     panel.update();
