@@ -21,7 +21,9 @@ define(function(require) {
       window.location.origin + '/onring.html');
 
     // Handle the system's alarm event.
-    navigator.mozSetMessageHandler('alarm', this.onMozAlarm.bind(this));
+    if (navigator.mozSetMessageHandler) {
+      navigator.mozSetMessageHandler('alarm', this.onMozAlarm.bind(this));
+    }
     window.addEventListener('test-alarm', this.onMozAlarm.bind(this));
 
     // Handle events transparently from the child window.
@@ -46,6 +48,10 @@ define(function(require) {
       });
       console.log('[Clock] -------------------------------------\n');
     });
+
+    if (!navigator.mozAlarm) {
+      return;
+    }
 
     var request = navigator.mozAlarms.getAll();
     request.onsuccess = function() {
