@@ -88,8 +88,10 @@
 
 [data-type="picker"] .value-indicator-colon {
   font: 2.2rem/4.4rem sans-serif;
-  background-color: #00A5C5;
   pointer-events: none;
+
+  position: relative;
+  top: -0.1rem;
 }
 
 .value-indicator-interval {
