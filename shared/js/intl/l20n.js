@@ -2399,7 +2399,9 @@
   function applyTranslations(view, elems, translations) {
     disconnect(view, null, true);
     for (let i = 0; i < elems.length; i++) {
-      overlayElement(elems[i], translations[i]);
+      if (elems[i].dataset.l10nId) { // hack, do not do anything if we have no l10n
+        overlayElement(elems[i], translations[i]);
+      }
     }
     reconnect(view);
   }
