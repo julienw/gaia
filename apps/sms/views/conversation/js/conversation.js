@@ -953,7 +953,13 @@ var ConversationView = {
       return;
     }
 
-    MessageManager.markMessagesRead([message.id]);
+    Utils.onceDocumentIsVisible().then(() => {
+      if (!this.isCurrentConversation(message.threadId)) {
+        return;
+      }
+      MessageManager.markMessagesRead([message.id]);
+      Utils.closeNotificationsForThread(message.threadId);
+    });
 
     this.onMessage(message);
     this.scrollViewToBottom();
