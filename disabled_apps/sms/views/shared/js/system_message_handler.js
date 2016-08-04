@@ -239,12 +239,6 @@
         notification.addEventListener(
           'click', () => this.onNotificationClicked(message)
         );
-
-        // Close notification if we are already in conversation view and app
-        // becomes visible.
-        if (document.hidden && isInConversation) {
-          Utils.onceDocumentIsVisible().then(() => notification.close());
-        }
       });
     },
 
