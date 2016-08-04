@@ -71,18 +71,16 @@ suite('utils.js', function() {
         .returns({});
 
       this.sinon.stub(utils, 'fileExists').returns(true);
+      this.sinon.stub(utils, 'readZipManifest')
+        .withArgs(sinon.match.has('leafName', appName))
+        .returns({
+          type: 'privileged',
+          name: appName,
+          origin: origin
+        });
       this.sinon.stub(utils, 'isExternalApp').returns(true);
+
       this.sinon.stub(utils, 'getUUIDMapping').returns({});
-      this.sinon.stub(utils, 'getZip').returns({
-        load: function() {},
-        file: function() {
-          return JSON.stringify({
-            type: 'privileged',
-            name: appName,
-            origin: origin
-          });
-        }
-      });
     });
 
     test('test', function() {
@@ -91,7 +89,6 @@ suite('utils.js', function() {
 
       var expected = {
         appDirPath: path,
-        appStatus: 2,
         manifest: { name: appName },
         manifestFilePath: path + '/manifest.webapp',
         url: config.GAIA_SCHEME + appName + '.' + config.GAIA_DOMAIN,
@@ -105,6 +102,7 @@ suite('utils.js', function() {
           origin: origin
         },
         metaData: {},
+        appStatus: 2,
         buildDirectoryFilePath: config.STAGE_DIR + '/' + appName,
         buildManifestFilePath:
           config.STAGE_DIR + '/' + appName + '/manifest.webapp',

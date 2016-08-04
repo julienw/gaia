@@ -1,6 +1,14 @@
 'use strict';
 
+/* global require, exports, Promise */
+
+const { Cc, Ci, Cu} = require('chrome');
+Cu.import('resource://gre/modules/FileUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/Promise.jsm');
+
 var utils = require('./utils');
+var dm = require('./download-manager');
 var config;
 var gaiaDir;
 var stageDir;
@@ -50,8 +58,7 @@ var InstallationManager = {
     var elem;
     for (index = 0; index < elementsOfNameOfEmId.length; index += 1) {
       elem = elementsOfNameOfEmId[index];
-      if (elem.parentNode &&
-          elem.parentNode.tagName.toLowerCase() === 'description') {
+      if (elem.parentNode && elem.parentNode.tagName === 'Description') {
         result = elem.innerHTML;
         break;
       }
@@ -73,42 +80,66 @@ var InstallationManager = {
   },
 
   _installFromUrl: function im_install_from_url(sourceUrl, filePath) {
+    var zipReader;
+    var file;
+    var sourceFileName;
+    var sourceUrlTokens;
+    var extractedDir;
+    var installRdf;
+    var installRdfContent;
+    var extensionId;
+    var unpack;
+    var entryEnumerator;
     var extensionDir;
-    var sourceUrlTokens = sourceUrl.split('/');
-    var sourceFileName = sourceUrlTokens[sourceUrlTokens.length - 1];
-    var zip = utils.getZip();
-    zip.load(filePath, 'read');
-    var extractedDir = utils.getTempFolder(sourceFileName);
-    var installRdf = utils.getFile(extractedDir.path, 'install.rdf');
 
-    // Peek install.rdf and look for what we need: extionsion id and unpack
-    zip.extract('install.rdf', installRdf.path);
-    var installRdfContent = utils.getXML(installRdf);
-    var extensionId =
+    sourceUrlTokens = sourceUrl.split('/');
+    sourceFileName = sourceUrlTokens[sourceUrlTokens.length - 1];
+    zipReader =
+      Cc['@mozilla.org/libjar/zip-reader;1'].createInstance(Ci.nsIZipReader);
+    file = utils.getFile(filePath);
+    zipReader.open(file);
+    extractedDir = utils.getTempFolder(sourceFileName);
+    installRdf = utils.getFile(extractedDir.path, 'install.rdf');
+
+    // peek install.rdf and look for what we need: extionsion id and unpack
+    zipReader.extract('install.rdf', installRdf);
+    installRdfContent = utils.getXML(installRdf);
+    extensionId =
       InstallationManager._getExtensionIdFromInstallRdf(installRdfContent);
-    var unpack =
+    unpack =
       InstallationManager._getUnpackFromInstallRdf(installRdfContent);
 
     if (unpack) {
       // case 1: extract content of xpi file to
       // build_stage/additional-extensions/<extensionId>/
-      extensionDir = utils.getFile(stageDir, 'additional-extensions',
-                                   extensionId);
+      extensionDir =
+        utils.getFile(stageDir, 'additional-extensions', extensionId);
       utils.ensureFolderExists(extensionDir);
-      zip.entries().forEach((entry) => {
-        var dest = utils.joinPath(stageDir, 'additional-extensions',
-                                  extensionId, entry);
-        zip.extract(entry, dest);
-      });
+      entryEnumerator = zipReader.findEntries('*');
+      while (entryEnumerator.hasMore()) {
+        try {
+          var zipEntryName = entryEnumerator.getNext();
+          var zipEntry = zipReader.getEntry(zipEntryName);
+          var targetFile = utils.getFile(
+            stageDir, 'additional-extensions', extensionId, zipEntryName);
+          var targetFileType = zipEntry.isDirectory ?
+              Ci.nsIFile.DIRECTORY_TYPE : Ci.nsIFile.NORMAL_FILE_TYPE;
+          if (!targetFile.exists()) {
+            targetFile.create(targetFileType, parseInt('0644', 8));
+            zipReader.extract(zipEntryName, targetFile);
+          }
+        } catch (e) {
+          logLine('Error extracting ' + zipEntryName + ' due to ' + e.message);
+        }
+      }
     } else {
       // case 2: put xpi file directly at build+stage/additional-extensions
       extensionDir = utils.getFile(stageDir, 'additional-extensions');
       utils.ensureFolderExists(extensionDir);
-      utils.copyFileTo(filePath, extensionDir.path, extensionId + '.xpi');
+      file.copyTo(extensionDir, extensionId + '.xpi');
     }
-
-    logLine('Download from ' + sourceUrl + ' successful');
-    zip.close();
+    logLine(sourceUrl + ' downloaded');
+    zipReader.close();
     InstallationManager.finish(sourceUrl);
   },
 
@@ -120,15 +151,16 @@ var InstallationManager = {
   },
 
   startInstalling: function im_start_installing(url) {
-    if (this._onTheFly.indexOf(url) < 0) {
-      this._onTheFly.push(url);
+    var self = this;
+    if (self._onTheFly.indexOf(url) < 0) {
+      self._onTheFly.push(url);
     }
-    try {
-      utils.download(url, null, this._installFromUrl,
-                     this.failOrCancel.bind(this, url));
-    } catch (err) {
-      logLine(err);
-    }
+    dm.getDownloadManager().download(
+      url, null, null, self._installFromUrl,
+      function(url) {
+        logLine('error downloading ' + url);
+        self.failOrCancel(url);
+      });
   },
 
   failOrCancel: function im_failOrCancel() {
@@ -147,7 +179,9 @@ var InstallationManager = {
   },
 
   isBusy: function im_is_busy() {
-    return this.howManyAreOnTheFly() > 0 || this._processing;
+    return this.howManyAreOnTheFly() > 0 ||
+      dm.getDownloadManager().count > 0 ||
+      this._processing;
   },
 
   howManyAreOnTheFly: function im_how_many_are_on_the_fly() {
@@ -222,54 +256,70 @@ var AdditionalExtensions = (function() {
   }
 
   function getExtensionUrl(extension) {
-    return new Promise(function(resolve, reject) {
-      var url;
-      try {
-        url = extension.url;
-        if (url) {
-          resolve(url);
-        } else {
-          getUrlFromAMO(extension.amo)
-            .then(function(amoUrl) {
-              resolve(amoUrl);
-            })
-            .catch(function(err) {
-              logLine(err);
-            });
-        }
-      } catch (e) {
-        reject(e);
+    var deferred = Promise.defer();
+    var url;
+    try {
+      url = extension.url;
+      if (url) {
+        deferred.resolve(url);
+      } else {
+        getUrlFromAMO(extension.amo).then(function(amoUrl) {
+          deferred.resolve(amoUrl);
+        });
       }
-    });
+    } catch (e) {
+      deferred.reject(e);
+    }
+    return deferred.promise;
   }
 
   function getUrlFromAMO(amoId) {
-    return new Promise(function(resolve, reject) {
-      function extractDownloadUrlFromAMO(sourceUrl, filePath) {
-        var xmlDoc;
-        var elems;
-        try {
-          xmlDoc = utils.getXML(utils.getFile(filePath));
-          elems = xmlDoc.getElementsByTagName('install');
-          resolve(elems[0].innerHTML);
-        } catch (e) {
-          reject(e);
-        }
+    var deferred = Promise.defer();
+    function extractDownloadUrlFromAMO(sourceUrl, filePath) {
+      var xmlDoc;
+      var elems;
+      try {
+        xmlDoc = utils.getXML(utils.getFile(filePath));
+        elems = xmlDoc.getElementsByTagName('install');
+        deferred.resolve(elems[0].innerHTML);
+      } catch (e) {
+        deferred.reject(e);
       }
+    }
 
-      utils.download(AMO_URL + amoId, null, extractDownloadUrlFromAMO, () => {
-        reject('No Download URL found for AMO ID: ' + amoId);
+    dm.getDownloadManager().download(AMO_URL + amoId,
+      null,
+      null,
+      extractDownloadUrlFromAMO,
+      function() {
+        deferred.reject('No Download URL found for AMO ID: ' + amoId);
       });
-    });
+    return deferred.promise;
   }
 
+  // main function
   function execute(options) {
+    logLine(JSON.stringify(options, null, '  '));
     config = options;
     gaiaDir = config.GAIA_DIR;
     stageDir = config.STAGE_DIR;
     var extensions;
     var downloadedExtensions;
     var keys;
+
+    function downloadAndInstall(url) {
+      try {
+        if (downloadedExtensions && downloadedExtensions[url]) {
+          logLine(' already downloaded');
+        } else {
+          logLine('download from ' + url);
+          InstallationManager.startInstalling(url);
+        }
+      } catch (e) {
+        InstallationManager.failOrCancel(url);
+        logLine(' failed');
+      }
+    }
 
     downloadedExtensions = loadDownloadedExtensions();
     extensions = merge(loadAdditionalExtensions(), loadCustomExtensions());
@@ -283,18 +333,7 @@ var AdditionalExtensions = (function() {
     if (keys.length > 0) {
       keys.forEach(function(prop) {
         logLine('Installing ' + prop + '...');
-        getExtensionUrl(extensions[prop])
-          .then((url) => {
-            try {
-              if (downloadedExtensions && downloadedExtensions[url]) {
-              } else {
-                InstallationManager.startInstalling(url);
-              }
-            } catch (e) {
-              logLine('Download from ' + url + ' failed');
-              InstallationManager.failOrCancel(url);
-            }
-          });
+        getExtensionUrl(extensions[prop]).then(downloadAndInstall);
       });
     } else {
       InstallationManager.failOrCancel();

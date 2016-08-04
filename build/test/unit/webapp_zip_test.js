@@ -15,7 +15,6 @@ suite('webapp-zip.js', function() {
   var isFile = false;
   var isDirectory = false;
   var isHidden = false;
-  var testResult;
 
   setup(function() {
     app = proxyquire.noCallThru().load(
@@ -45,27 +44,19 @@ suite('webapp-zip.js', function() {
         return isDirectory;
       };
     };
-
     mockUtils.getFile = function() {
       var args = Array.prototype.slice.call(arguments);
       filePath = fsPath.join.apply(fsPath, args);
       return new GetFile(filePath);
     };
 
-    mockUtils.getZip = function() {
-      return {
-        load: function(zipPath) {
-          zipFilePath = zipPath;
-        },
+    mockUtils.createZip = function(zipPath) {
+      zipFilePath = zipPath;
+      return {};
+    };
 
-        file: function(pathInZip, file, options) {
-          testResult = {
-            pathInZip: pathInZip,
-            file: file,
-            compression: options.compression
-          };
-        }
-      };
+    mockUtils.getCompression = function(type) {
+      return type;
     };
 
     mockUtils.ensureFolderExists = function() {
@@ -116,15 +107,15 @@ suite('webapp-zip.js', function() {
         }
       };
       webappZip.options.webapp.metaData.zip.mmap_files = [pathInZip];
-      assert.equal(webappZip.getCompression(pathInZip), 'STORE');
+      assert.equal(webappZip.getCompression(pathInZip), 'none');
 
       // we don't compress jpg file.
       pathInZip = 'pathInZip.jpg';
       delete webappZip.options.webapp.metaData;
-      assert.equal(webappZip.getCompression(pathInZip), 'STORE');
+      assert.equal(webappZip.getCompression(pathInZip), 'none');
 
       pathInZip = 'pathInZip.png';
-      assert.equal(webappZip.getCompression(pathInZip), 'DEFLATE');
+      assert.equal(webappZip.getCompression(pathInZip), 'best');
     });
 
     test('isExcludedFromZip', function() {
@@ -176,10 +167,19 @@ suite('webapp-zip.js', function() {
   suite('addToZip', function() {
     var webappZip;
     var isExcludedFromZip;
+    var testResult;
 
     setup(function() {
       fileExists = true;
       isExcludedFromZip = false;
+      mockUtils.addFileToZip = function(zip, pathInZip, file, compression) {
+        testResult = {
+          zip: zip,
+          pathInZip: pathInZip,
+          file: file,
+          compression: compression
+        };
+      };
       webappZip = new app.WebappZip();
       webappZip.options = {
         GAIA_DEFAULT_LOCALE: 'en-US-test',
@@ -191,9 +191,8 @@ suite('webapp-zip.js', function() {
         return isExcludedFromZip;
       };
       webappZip.getCompression = function() {
-        return 'NONE';
+        return '1';
       };
-      webappZip.zipFile = mockUtils.getZip();
     });
 
     teardown(function() {
