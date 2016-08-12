@@ -733,12 +733,6 @@ var ConversationView = {
     // to slide correctly. Bug 1009541
     this.cancelEdit();
 
-    if (Navigation.isCurrentPanel('thread')) {
-      // If we're leaving conversation view, ensure that the thread object's
-      // unreadCount value is current (set = 0).
-      this.activeThread.unreadCount = 0;
-    }
-
     this.updateDraft();
 
     // TODO move most of back() here: Bug 1010223
