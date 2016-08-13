@@ -892,12 +892,7 @@ var InboxView = {
   },
 
   onMessageReceived: function inbox_onMessageReceived(e) {
-    // If user currently in the same thread, then mark thread as read
-    var markAsRead = Navigation.isCurrentPanel('thread', {
-      id: e.message.threadId
-    });
-
-    this.updateThread(e.message, { unread: !markAsRead });
+    this.updateThread(e.message, { unread: true });
   },
 
   onThreadsDeleted: function inbox_onThreadDeleted(e) {

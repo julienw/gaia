@@ -951,7 +951,7 @@ var ConversationView = {
       if (!this.isCurrentConversation(message.threadId)) {
         return;
       }
-      MessageManager.markMessagesRead([message.id]);
+      InboxView.markReadUnread([message.threadId], /* isRead */ true);
       Utils.closeNotificationsForThread(message.threadId);
     });
 
