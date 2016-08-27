@@ -405,7 +405,7 @@ var VIEWS = {
 
             document.l10n.setAttributes(
               unitElement,
-              `duration-${unit}-narrow`,
+              `unitformat-duration-${unit}-narrow`,
               { value: output }
             );
             unitElement.classList.remove('hide');
